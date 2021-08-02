@@ -1,0 +1,174 @@
+﻿@using BlazorInputFile; 
+@using Simucraft.Client.Models;
+
+@page "/rulesets/{rulesetId}/mapview/{id}" 
+
+  <div class="ui grid">
+    <div id="mapViewContainer" class="four wide column">
+      @if (!string.IsNullOrEmpty(_errorMessage))
+      {
+        <div class="ui negative message">
+          <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+          <div class="header">
+            Error
+          </div>
+          <p>@_errorMessage</p>
+        </div>
+      }
+      <h2 class="ui dividing header">
+        <i class="map icon"></i>
+        <div class="content">
+          Map
+        </div>
+      </h2>
+      @if (!_isInitialized)
+      {
+        <form class="ui form">
+          <div class="ui fluid placeholder">
+            <div class="short line"></div>
+            <div class="full line"></div>
+            <div class="full line"></div>
+          </div>
+          <div class="ui fluid placeholder">
+            <div class="short line"></div>
+            <div class="full line"></div>
+            <div class="full line"></div>
+            <div class="full line"></div>
+          </div>
+          <div class="ui fluid placeholder">
+            <div class="full line"></div>
+            <div class="full line"></div>
+          </div>
+        </form>
+      }
+      else
+      {
+        <div class="ui tiny menu">
+          <a class="item @(_mapViewOption == MapViewOption.Edit ? "active" : null)" @onclick="@(() => _mapViewOption = MapViewOption.Edit)">
+            <i class="edit icon"></i>
+            Edit
+          </a>
+          <a class="item @(_mapViewOption == MapViewOption.Characters ? "active" : null)" @onclick="@(() => this.SetMapViewOption(MapViewOption.Characters))">
+            <i class="male icon"></i>
+            Characters
+          </a>
+          @*<a class="item @(_mapViewOption == MapViewOption.GameObjects ? "active" : null)" @onclick="@(() => this.SetMapViewOption(MapViewOption.GameObjects))">
+            <i class="chess knight icon"></i>
+            Game Objects
+          </a>*@
+        </div>
+
+        @if (_mapViewOption == MapViewOption.Edit)
+        {
+          <EditForm OnSubmit="@this.SubmitAsync" EditContext="@_editContextValidator.EditContext" class="ui form" style="@(!_isInitialized ? "display: none" : null)">
+            <DataAnnotationsValidator></DataAnnotationsValidator>
+            <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_map.Name)) ? "error" : null)">
+              <label>Name</label>
+              <InputText class="focus ui input" type="text" placeholder="Map Name" maxlength="50" @bind-Value="_map.Name" />
+              <div class="ui pointing red basic label" style="@(!_editContextValidator.IsFieldValidated(nameof(_map.Name)) ? null : "display: none")">
+                <ValidationMessage For="@(() => _map.Name)"></ValidationMessage>
+              </div>
+            </div>
+            <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_map.Description)) ? "error" : null)">
+              <label>Description</label>
+              <InputTextArea class="ui input" rows="2" maxlength="250" placeholder="Describe the Map" @bind-Value="_map.Description" style="resize: none;" />
+              <div class="ui pointing red basic label" style="@(!_editContextValidator.IsFieldValidated(nameof(_map.Description)) ? null : "display: none")">
+                <ValidationMessage For="@(() => _map.Description)"></ValidationMessage>
+              </div>
+            </div>
+            <div class="field" style="@(!_editContextValidator.IsFieldValidated(nameof(_map.ImageName)) ? null : "display: none")">
+              <div class="ui pointing red basic label">
+                <ValidationMessage For="@(() => _map.ImageName)"></ValidationMessage>
+              </div>
+            </div>
+            <div class="field">
+              <button id="saveButton" class="ui fluid large submit primary button @(_isSaving ? "loading disabled" : null)">Save</button>
+            </div>
+          </EditForm>
+        }
+        @if (_mapViewOption == MapViewOption.Characters)
+        {
+          <div id="characterlist" class="ui middle aligned selection restrict list">
+            @foreach (var characterGroup in _characters.GroupBy(c => c.Category.ToUpper()).OrderBy(c => c.Key))
+            {
+              <h4 class="ui horizontal divider header">
+                @characterGroup.Key
+              </h4>
+
+              @foreach (var character in characterGroup.OrderBy(c => c.Name))
+              {
+                var characterId = character.Id;
+
+                <div class="item @(_selectedCharacterId == characterId ? "active" : null)" @onclick="@(async () => await this.ToggleCharacterSelectionAsync(characterId))">
+                  <img class="ui avatar image" src="@(string.IsNullOrEmpty(character.ImageUrl) ? "/assets/question-mark.png" : character.ImageUrl)" />
+                  <div class="content">
+                    <div class="header">
+                      @character.Name
+                    </div>
+                  </div>
+
+                  @if (!string.IsNullOrEmpty(character.Description) && _selectedCharacterId == characterId)
+                  {
+                    <div class="description preservelinespadding">
+                      @character.Description
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </div>
+        }
+      }
+    </div>
+    <div class="twelve wide column" style="padding-right: 0rem;">
+      @*<div id="menu" class="ui attached top tiny menu" style="margin-top: -1rem">*@
+      <div id="menu" class="ui attached top tiny menu" style="margin-top: -1.6rem">
+        <div class="ui selection dropdown item">
+          <i class="dropdown icon"></i>
+          <div class="text zoom">@(_selectedZoom)%</div>
+          <div class="menu">
+            @foreach (var increment in _zoomIncrements)
+            {
+              var zoom = increment;
+              <div class="item @(_selectedZoom == zoom ? "active selected" : null) " value="@zoom" @onclick="@(async () => await this.SetZoomAsync(zoom))">@zoom%</div>
+            }
+          </div>
+        </div>
+        <a class="item @(_isGridVisible ? "active" : null)" @onclick="@this.ToggleGridAsync">
+          <i class="@(_isGridVisible ? "eye" : "eye slash") icon"></i>
+          Grid
+        </a>
+        <a class="ui item @(_mapMenuOption == MapMenuOption.Characters ? "active" : null)" @onclick="@(async () => await this.ToggleCharacterSelectionAsync(null))">
+          <i class="male icon"></i>
+          Characters
+        </a>
+        <a class="ui item @(_mapMenuOption == MapMenuOption.Collision ? "active" : null)" @onclick="@this.SetCollisionAsync">
+          <i class="th icon"></i>
+          Collision
+        </a>
+        @if (_mapMenuOption == MapMenuOption.Collision)
+        {
+          <a class="ui item @(_collisionType == CollisionType.None ? "active" : null)" @onclick="@(async () => await this.SetCollisionTypeAsync(CollisionType.None))">
+            <i class="erase icon"></i>
+          </a>
+          <a class="ui item @(_collisionType.HasFlag(CollisionType.Top) ? "active" : null)" @onclick="@(async () => await this.ToggleCollisionTypeAsync(CollisionType.Top))">
+            <i class="icon"></i>
+            Top
+          </a>
+          <a class="ui item @(_collisionType.HasFlag(CollisionType.Right) ? "active" : null)" @onclick="@(async () => await this.ToggleCollisionTypeAsync(CollisionType.Right))">
+            <i class="icon"></i>
+            Right
+          </a>
+          <a class="ui item @(_collisionType.HasFlag(CollisionType.Bottom) ? "active" : null)" @onclick="@(async () => await this.ToggleCollisionTypeAsync(CollisionType.Bottom))">
+            <i class="icon"></i>
+            Bottom
+          </a>
+          <a class="ui item @(_collisionType.HasFlag(CollisionType.Left) ? "active" : null)" @onclick="@(async () => await this.ToggleCollisionTypeAsync(CollisionType.Left))">
+            <i class="icon"></i>
+            Left
+          </a>
+        }
+      </div>
+      <div id="tilemapContainer" @onwheel="@this.ZoomAsync" @onmousedown="@this.RemoveSelectedCharacter"></div>
+    </div>
+  </div>

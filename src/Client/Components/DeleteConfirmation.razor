@@ -1,0 +1,13 @@
+﻿<div id="deleteConfirmation" class="ui small basic modal transition">
+  <div class="ui icon header">
+    <i class="trash icon"></i>
+    Delete @ItemType
+  </div>
+  <div class="content">
+    <p>Are you sure you want to delete this @ItemType? This action cannot be undone and the @ItemType will be permanently unavailable.</p>
+  </div>
+  <div class="actions">
+    <div class="ui green inverted approve button" @onclick="@this.ConfirmClicked">Confirm</div>
+    <div class="ui red basic inverted cancel button">Cancel</div>
+  </div>
+</div>

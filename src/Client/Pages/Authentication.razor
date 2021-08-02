@@ -1,0 +1,18 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@page "/authentication/{action}"
+
+<div class="ui container">
+  <div class="ui icon message">
+    <i class="info circle icon"></i>
+    <div class="content">
+      <div class="header">
+        Authentication
+      </div>
+      <p>
+        <RemoteAuthenticatorView Action="@this.Action"></RemoteAuthenticatorView>
+      </p>
+    </div>
+  </div>
+</div>
+     

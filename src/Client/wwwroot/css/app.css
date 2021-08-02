@@ -1,0 +1,171 @@
+﻿html, body {
+    /*font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;*/
+    min-height: 20em;
+}
+
+app {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    /*height: 100vh;*/
+}
+
+/*#main {
+    overflow: hidden;
+}*/
+
+.ui.image.fixedrounded {
+    width: 4em;
+    height: 4em;
+}
+
+.description.preservelinespadding {
+    white-space: pre-line;
+    margin-top: -1rem;
+    padding-left: 2.8rem;
+}
+
+.ui.cardimage {
+    max-height: 25rem;
+}
+
+.description.preservelines {
+    white-space: pre-line;
+    margin-top: -1rem;
+}
+
+.ui.restrict {
+    overflow-y: auto;
+    width: 100%;
+    position: absolute;
+}
+
+.infotableitem {
+    padding-left: 2.1rem !important;
+}
+
+.item.itempadding {
+    padding-bottom: 1rem !important;
+}
+
+.indexsegment {
+    margin-top: -2rem !important;
+    margin-left: -2rem !important;
+    margin-right: -2rem !important;
+    padding-top: 5rem !important;
+    padding-bottom: 5rem !important;
+}
+
+.ui.noresize {
+    resize: none !important;
+}
+
+.ui.chatmessages {
+    /*Hide scroll bar once I find a fix for the scroll bar appearing moving the content*/
+    overflow-y: scroll;
+    width: 100%;
+    height: auto;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    display: block;
+    margin-top: 4rem;
+    margin-bottom: 6rem;
+}
+/*.ui.chatmessages:hover, .ui.chatmessages:active, .ui.chatmessages:focus {
+    overflow-y: auto;
+}
+*/
+.ui.chatinput {
+    position: absolute;
+    bottom: 1rem;
+    left: 0;
+    right: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.ui.searchbar {
+    width: 100%;
+}
+
+.mutedlink {
+    color: rgba(0,0,0,.4);
+}
+
+    .mutedlink:hover {
+        color: rgb(0,0,0);
+    }
+
+.main {
+    flex: 1;
+}
+
+.removepadding {
+    padding: 0rem;
+}
+
+.restorepadding {
+    padding: 1rem;
+}
+
+.paddingleft {
+    padding-left: 1rem;
+}
+
+.paddingright {
+    padding-right: 1rem;
+}
+
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
+
+.ui.grid {
+    height: 100%;
+}
+
+canvas {
+    background-color: #ffffff;
+    display: block;
+    position: fixed;
+}
+
+.slider {
+    resize: horizontal;
+}
+
+.inputfile {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+.relative {
+    position: relative;
+}
+
+.pad {
+    padding-left: 15px;
+    padding-top: 5px;
+}

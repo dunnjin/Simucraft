@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Simucraft</title>
+  <base href="/" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+  <link href="css/app.css" rel="stylesheet" />
+  <link href="manifest.json" rel="manifest" />
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+  <link href="_content/blazor-dragdrop/dragdrop.css" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"
+          integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+          crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+  <script src="scripts/semantic.helpers.js"></script>
+  <script src="https://unpkg.com/konva@^2/konva.min.js"></script>
+  <script src="_content/BlazorInputFile/inputfile.js"></script>
+  <script src="scripts/common.js"></script>
+  <script src="scripts/map.js"></script>
+  <script src="scripts/game.js"></script>
+</head>
+
+<body>
+  <app>
+    <div class="ui vertical grid">
+      <div class="ui segment">
+        <div class="ui active page dimmer">
+          <div class="ui text loader">
+            Loading Simucraft...
+          </div>
+        </div>
+      </div>
+    </div>
+</app>
+
+  <script src="_content/Microsoft.Authentication.WebAssembly.Msal/AuthenticationService.js"></script>
+  <script src="_framework/blazor.webassembly.js"></script>
+  <script>navigator.serviceWorker.register('service-worker.js');</script>
+</body>
+
+</html>

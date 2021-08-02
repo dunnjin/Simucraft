@@ -1,0 +1,24 @@
+﻿
+<h2 class="ui center aligned icon header">
+  <i class="ui circular cogs icon"></i>
+  <div class="content">
+    Weapons
+    <div class="sub header">Hit things with these tools</div>
+  </div>
+</h2>
+
+@*<h4 class="ui center aligned header">
+  WEAPONS
+</h4>*@
+<table class="ui compact small black fixed selectable table">
+  <tbody>
+    @foreach (var weapon in this.GameCharacter.Weapons.OrderBy(e => e.Name))
+    {
+      <tr>
+        <td @key="weapon" class="infotableitem left aligned" @onclick="@(async () => await this.WeaponSelectedAsync(weapon))">
+          @weapon.Name
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>

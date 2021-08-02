@@ -1,0 +1,167 @@
+﻿@using Simucraft.Client.Models;
+
+  @if (!string.IsNullOrEmpty(_errorMessage))
+  {
+    <div class="ui negative message">
+      <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+      <div class="header">
+        Error
+      </div>
+      <p>@_errorMessage</p>
+    </div>
+  }
+  <h2 class="ui header">
+    @if (_isListView)
+    {
+      <a class="ui right floated positive basic button" @onclick="@(() => this.NavigateToCreate(null))">
+        <i class="add icon"></i>
+        Create
+      </a>
+    }
+    <i class="magic icon"></i>
+    <div class="content">
+      Spells
+      <div class="sub header">Spells are assigned to a Character and can be used for damaging, healing, or other effects.</div>
+    </div>
+  </h2>
+
+  @if (_isListView)
+  {
+    @foreach (var group in this.Ruleset.Skills.GroupBy(w => w.Category.ToUpper()).OrderBy(w => w.Key))
+    {
+      <h4 class="ui dividing header">
+        @group.Key
+      </h4>
+      <div class="ui link four cards">
+        @foreach (var entity in group.OrderBy(e => e.Name))
+        {
+          var id = entity.Id;
+          <div class="purple card" @onclick="@(() => this.NavigateToCreate(id))">
+            <div class="content">
+              <div class="header">@entity.Name</div>
+              <div class="description">
+                <p>@entity.Description</p>
+              </div>
+            </div>
+            <div class="extra content">
+              <a class="left floated like" @onclick="@(async () => await this.CopyAsync(id))" @onclick:stopPropagation>
+                <i class="copy icon grey"></i>
+                Copy
+              </a>
+              <a class="right floated delete" @onclick="@(async () => await this.PromptDeleteAsync(id))" @onclick:stopPropagation>
+                <i class="delete icon red"></i>
+                Delete
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+  else
+  {
+<EditForm OnSubmit="@this.SubmitAsync" EditContext="@_editContextValidator.EditContext" class="ui form">
+  <DataAnnotationsValidator></DataAnnotationsValidator>
+  <div class="two fields">
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_spell.Name)) ? "error" : null)">
+      <label data-tooltip="The Name of the Spell" data-position="top left">
+        Name
+      </label>
+      <InputText class="focus ui input" type="text" placeholder="Name" maxlength="50" @bind-Value="_spell.Name" />
+      @if (!_editContextValidator.IsFieldValidated(nameof(_spell.Name)))
+      {
+        <div class="ui pointing red basic label">
+          <ValidationMessage For="@(() => _spell.Name)"></ValidationMessage>
+        </div>
+      }
+    </div>
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_spell.Category)) ? "error" : null)">
+      <label data-tooltip="How the Spell should be grouped by" data-position="top left">
+        Category
+      </label>
+      <InputText class="ui input" type="text" placeholder="Category" maxlength="50" @bind-Value="_spell.Category" />
+      @if (!_editContextValidator.IsFieldValidated(nameof(_spell.Category)))
+      {
+        <div class="ui pointing red basic label">
+          <ValidationMessage For="@(() => _spell.Category)"></ValidationMessage>
+        </div>
+      }
+    </div>
+  </div>
+  <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_spell.Description)) ? "error" : null)">
+    <label data-tooltip="A description of the Skill" data-position="top left">
+      Description
+    </label>
+    <InputTextArea class="ui input noresize" rows="2" type="text" placeholder="Describe the Spell" maxlength="1000" @bind-Value="_spell.Description" />
+    @if (!_editContextValidator.IsFieldValidated(nameof(_spell.Description)))
+    {
+      <div class="ui pointing red basic label">
+        <ValidationMessage For="@(() => _spell.Description)"></ValidationMessage>
+      </div>
+    }
+  </div>
+  <div class="three fields">
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_spell.Range)) ? "error" : null)">
+      <label data-tooltip="Determines the number of tile the spell can be cast" data-position="top left">
+        Range
+      </label>
+      <InputNumber class="ui input" placeholder="0" min="0" max="100" @bind-Value="@_spell.Range"></InputNumber>
+      @if (!_editContextValidator.IsFieldValidated(nameof(_spell.Range)))
+      {
+        <div class="ui pointing red basic label">
+          <ValidationMessage For="@(() => _spell.Range)"></ValidationMessage>
+        </div>
+      }
+    </div>
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_spell.Width)) ? "error" : null)">
+      <label data-tooltip="Determines the number of tiles wide for the Spells area of effect" data-position="top left">
+        Width
+      </label>
+      <InputNumber class="ui input" placeholder="1" min="1" max="50" @bind-Value="@_spell.Width"></InputNumber>
+      @if (!_editContextValidator.IsFieldValidated(nameof(_spell.Width)))
+      {
+        <div class="ui pointing red basic label">
+          <ValidationMessage For="@(() => _spell.Width)"></ValidationMessage>
+        </div>
+      }
+    </div>
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_spell.Height)) ? "error" : null)">
+      <label data-tooltip="Determines the number of tiles high for the Spells area of effect" data-position="top left">
+        Height
+      </label>
+      <InputNumber class="ui input" placeholder="1" min="1" max="50" @bind-Value="@_spell.Height"></InputNumber>
+      @if (!_editContextValidator.IsFieldValidated(nameof(_spell.Height)))
+      {
+        <div class="ui pointing red basic label">
+          <ValidationMessage For="@(() => _spell.Height)"></ValidationMessage>
+        </div>
+      }
+    </div>
+  </div>
+  <div class="three fields">
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_spell.Description)) ? "error" : null)">
+      <label data-tooltip="" data-position="top left">
+        Damage Types
+      </label>
+      <InputText class="ui input" type="text" placeholder="Category" maxlength="50" @bind-Value="_spell.Category" />
+      @if (!_editContextValidator.IsFieldValidated(nameof(_spell.Category)))
+      {
+        <div class="ui pointing red basic label">
+          <ValidationMessage For="@(() => _spell.Category)"></ValidationMessage>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="two fields">
+    <div class="field">
+      <button class="ui fluid large submit primary button @(_isSaving ? "loading disabled" : null)">Save</button>
+    </div>
+    <div class="field">
+      <button type="button" class="ui fluid large button @(_isSaving ? "disabled" : null)" @onclick="() => _isListView = true">Cancel</button>
+    </div>
+  </div>
+</EditForm>
+  }
+<DeleteConfirmation ItemType="Spell" ConfirmClicked="@this.DeleteAsync"></DeleteConfirmation>
+

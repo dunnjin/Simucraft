@@ -1,0 +1,202 @@
+﻿<div class="ui top tiny menu" style="margin: 0rem; border-top-color: transparent">
+  <a class="item @(_gameCharacterBookView == Models.GameCharacterBookView.TurnOrder ? "active" : null)" data-tooltip="Turn Order" data-position="right center" @onclick="@(() => this.ToggleNavigation(Models.GameCharacterBookView.TurnOrder))">
+    <i class="align justify icon"></i>
+  </a>
+  <a class="item @(_gameCharacterBookView == Models.GameCharacterBookView.Players ? "active" : null)" data-tooltip="Players" data-position="right center" @onclick="@(() => this.ToggleNavigation(Models.GameCharacterBookView.Players))">
+    <i class="user icon"></i>
+  </a>
+  <div class="right menu">
+    <a class="item" data-tooltip="@(!this.ClientStateInformation.HideInvisibleGameCharacters ? "Hide Inactive Characters" : "Show All Characterse")" data-position="left center" @onclick="@(() => this.ClientStateInformation.HideInvisibleGameCharacters = !this.ClientStateInformation.HideInvisibleGameCharacters)">
+      <i class="eye @(this.ClientStateInformation.HideInvisibleGameCharacters ? "slash" : null) icon"></i>
+    </a>
+  </div>
+</div>
+
+
+<div id="gamecharacterbook" class="ui middle aligned selection restrict list" style="padding-left: 1rem; padding-right: 1rem; padding-top: 1rem;">
+  @if (_gameCharacterBookView == Models.GameCharacterBookView.TurnOrder)
+  {
+    @foreach (var character in this.GameState.GameCharacters.Where(c => !this.ClientStateInformation.HideInvisibleGameCharacters ? true : c.IsVisible).OrderByDescending(c => c.TurnOrder).ThenBy(c => c.Id))
+    {
+      var characterId = character.Id;
+
+
+      <div class="item relative @(this.ClientStateInformation.SelectedGameCharacterId == characterId ? "active" : null)" @onclick="@(() => this.SelectGameCharacterId(characterId))" style="@(this.GameState.CurrentTurnId == characterId ? "background-color: lightgray;" : null)">
+
+        @if (this.ClientStateInformation.SelectedGameCharacterId == characterId && this.Ruleset.IsOwner)
+        {
+          <div class="right floated content" style="margin-right: 2rem;">
+            <div class="ui compact right pointing dropdown icon button" @onclick:stopPropagation data-tooltip="Send To" data-position="left center">
+              <i class="send icon"></i>
+              <div class="menu">
+                @foreach (var sendUser in this.UserInformation.AuthorizedUsers.OrderBy(u => u.DisplayName))
+                {
+                  var sendUserId = sendUser.UserId;
+                  <a class="item" @onclick="@(async () => await this.SendUserAsync(sendUserId, characterId))">
+                    @sendUser.DisplayName
+                  </a>
+                }
+              </div>
+            </div>
+            <div class="ui compact icon button @(!this.Game.MapId.HasValue ? "disabled" : null)" data-tooltip="Place Character on Map" data-position="left center" @onclick="@(async () => await this.PlaceGameCharacterAsync())" @onclick:stopPropagation>
+              <i class="hand pointer icon"></i>
+            </div>
+            <div class="ui compact icon button" data-tooltip="Favorite Character" data-position="left center" @onclick="@(() => this.FavoriteAsync(characterId))" @onclick:stopPropagation>
+              <i class="star @(character.IsFavorite ? null : "outline") icon"></i>
+            </div>
+          </div>
+        }
+
+        <div class="ui mini right blue corner label" style="padding-left: 15px; padding-top: 5px;">
+          @character.TurnOrder
+        </div>
+        <img class="ui avatar image" src="@(string.IsNullOrEmpty(character.ImageUrl) ? "/assets/question-mark.png" : character.ImageUrl)" />
+        <div class="content">
+          <div class="ui @(character.IsVisible ? null : "disabled") sub header">@character.Name</div>
+          <div class="description">@this.UserInformation.AuthorizedUsers.FirstOrDefault(u => u.UserId == character.UserId)?.DisplayName</div>
+        </div>
+      </div>
+    }
+  }
+  else if (_gameCharacterBookView == Models.GameCharacterBookView.Players)
+  {
+    @if (!string.IsNullOrEmpty(_emailError))
+    {
+      <div class="ui negative message">
+        <i class="close icon" @onclick="(() => _emailError = null)"></i>
+        <div class="header">
+          Error
+        </div>
+        <p>@_emailError</p>
+      </div>
+    }
+
+    <h2 class="ui header">
+      Players
+      @*<a class="ui right floated positive basic button" @onclick="@(() => _isInviteView = true)">
+        <i class="add icon"></i>
+        Invite
+      </a>
+      <div class="content">
+        Players
+        <div class="sub content">Manage Players in the Game</div>
+      </div>*@
+    </h2>
+    @if (this.Ruleset.IsOwner)
+    {
+      @*
+      <h4 class="ui horizontal divider header" style="padding-top: 1rem;">
+        INVITE PLAYER
+      </h4>
+      <EditForm class="ui form" EditContext="_editContextValidator.EditContext" OnSubmit="@this.InviteEmailAsync">
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+        <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_inviteRequest.Email)) ? "error" : null)">
+          <InputText class="ui input" placeholder="Email Address" @bind-Value="_inviteRequest.Email"></InputText>
+          <div class="ui pointing red basic label" style="@(!_editContextValidator.IsFieldValidated(nameof(_inviteRequest.Email)) ? null : "display: none")">
+            <ValidationMessage For="@(() => _inviteRequest.Email)"></ValidationMessage>
+          </div>
+        </div>
+        <div class="field">
+          <button class="ui fluid submit large primary button @(_isSaving ? "loading disabled" : null)">
+            Send
+          </button>
+        </div>
+      </EditForm>
+        *@
+    }
+
+    <table class="ui very basic selectable table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach(var user in this.UserInformation.AuthorizedUsers.OrderBy(s => s.DisplayName))
+        {
+          var userId = user.UserId;
+          <tr class="@(_selectedAuthorizedUserId == userId ? "active" : null)" @onclick="@(() => _selectedAuthorizedUserId = _selectedAuthorizedUserId == userId ? null : (Guid?)userId)">
+            <td>
+              @user.DisplayName
+            </td>
+            <td>
+              @user.EmailNormalized
+            </td>
+            <td class="collapsing">
+              @if (_selectedAuthorizedUserId == userId)
+              {
+                <div class="ui fitted icon button" data-tooltip="Remove Player" data-position="left center" @onclick="@(() => this.RemovePlayerAsync())" @onclick:stopPropagation>
+                  <i class="delete icon"></i>
+                </div>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="3">
+            <div class="ui right floated small primary labeled icon button">
+              <i class="user icon"></i>
+              Invite Player
+            </div>
+          </th>
+        </tr>
+      </tfoot>
+    </table>
+
+    @foreach (var user in this.UserInformation.AuthorizedUsers.OrderBy(s => s.DisplayName))
+    {
+      var userId = user.UserId;
+      <div class="item @(_selectedAuthorizedUserId == userId ? "active" : null)" @onclick="@(() => _selectedAuthorizedUserId = _selectedAuthorizedUserId == userId ? null : (Guid?)userId)">
+        @if (_selectedAuthorizedUserId == user.UserId && this.Ruleset.IsOwner && _selectedAuthorizedUserId != this.Ruleset.UserId)
+        {
+          <div class="right floated content">
+            <div class="ui compact icon button" data-tooltip="Remove Player" data-position="left center" @onclick="@(() => this.RemovePlayerAsync())" @onclick:stopPropagation>
+              <i class="delete icon"></i>
+            </div>
+          </div>
+        }
+        @*<i class="@(user.IsConnected ? "green" : "red") circle icon"></i>*@
+        <div class="content">
+          <div class="header" style="padding-top: 2px">
+            @user.DisplayName
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (this.Ruleset.IsOwner)
+    {
+
+
+      @if (this.UserInformation.InvitedUsers.Any())
+      {
+        <h4 class="ui horizontal divider header">
+          PENDING INVITES
+        </h4>
+        @foreach (var user in this.UserInformation.InvitedUsers.OrderBy(u => u.Email))
+        {
+          var email = user.EmailNormalized;
+          <div class="item @(_selectedPendingInvite == email ? "active" : null)" @onclick="@(() => _selectedPendingInvite = _selectedPendingInvite == email ? null : email)">
+            @if (_selectedPendingInvite == email)
+            {
+              <div class="right floated content">
+                <div class="ui compact icon button" data-tooltip="Remove Invite" data-position="left center" @onclick="@(() => this.RemoveInviteAsync())" @onclick:stopPropagation>
+                  <i class="delete icon"></i>
+                </div>
+              </div>
+            }
+            <div class="content">
+              <div class="ui @(user.ExpirationDateTime > DateTime.UtcNow ? "disabled" : null)) sub header">
+                @user.EmailNormalized
+              </div>
+            </div>
+          </div>
+        }
+      }
+    }
+  }
+</div>

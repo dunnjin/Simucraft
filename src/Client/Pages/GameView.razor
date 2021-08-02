@@ -1,0 +1,159 @@
+﻿@using Simucraft.Client.Models;
+@using Simucraft.Client.Common; 
+
+@page "/rulesets/{rulesetId}/gameview/{id}"
+
+<div class="ui vertical grid" style="margin-top: -1.6rem;">
+  @if(!_isConnected)
+  {
+    <div class="ui active page dimmer">
+      <div class="ui text loader">
+        Connecting to Server...
+      </div>
+    </div>
+  }
+  else if (_isLoading)
+  {
+  <div class="ui active page dimmer">
+    <div class="ui text loader">
+      @_loadingMessage
+    </div>
+  </div>
+  }
+    @*TODO: Add this on columns to remove padding between canvas. style="padding-right: 0rem; padding-left: 0rem;"*@
+
+  @if (!_isLeftCollapsed)
+  {
+<div class="three wide column" style="padding: 0rem;">
+  <div class="ui top attached tiny menu">
+    <a class="item @(_gameViewOption == GameViewOption.Ruleset ? "active" : null)" @onclick="@(() => _gameViewOption = GameViewOption.Ruleset)">
+      <i class="book icon"></i>
+      Ruleset
+    </a>
+    <a class="item @(_gameViewOption == GameViewOption.GameCharacters ? "active" : null)" @onclick="@(async () => _gameViewOption = GameViewOption.GameCharacters)">
+      <i class="address book icon"></i>
+      Characters
+      @if (_newGameCharactersCount > 0)
+      {
+        <div class="floating ui red label">@_newGameCharactersCount</div>
+      }
+    </a>
+    <a class="item @(_gameViewOption == GameViewOption.Info ? "active" : null)" @onclick="@(() => _gameViewOption = GameViewOption.Info)">
+      <i class="question icon"></i>
+      Info
+    </a>
+  </div>
+
+  @if (_gameViewOption == GameViewOption.Info)
+  {
+    <GameCharacterInfo Game="@_gameInformation" GameState="@_gameStateInformation" ClientState="@_clientStateInformation" GameHubService="@this.GameHubService" Ruleset="@_rulesetInformation"></GameCharacterInfo>
+  }
+  @if (_gameViewOption == GameViewOption.Ruleset)
+  {
+    <GameRuleset GameHubService="@this.GameHubService" Ruleset="@_rulesetInformation" UserInformation="@_gameUserInformation" Game="@_gameInformation" GameState="@_gameStateInformation" ClientState="@_clientStateInformation"></GameRuleset>
+  }
+  @if (_gameViewOption == GameViewOption.GameCharacters)
+  {
+    <GameCharacterBook Ruleset="@_rulesetInformation" UserInformation="@_gameUserInformation" Game="@_gameInformation" GameState="@_gameStateInformation" ClientStateInformation="@_clientStateInformation" GameHubService="@this.GameHubService"></GameCharacterBook>
+  }
+</div>
+}
+
+<div class="@(_isLeftCollapsed && _isRightCollapsed ? "sixteen" : _isLeftCollapsed && !_isRightCollapsed ? "fourteen" : !_isLeftCollapsed && _isRightCollapsed ? "thirteen" : "eleven") wide column" style="padding: 0rem;">
+  <div id="menu" class="ui top attached tiny menu">
+    <a class="item" @onclick="@this.ToggleLeftCollapseAsync">
+      <i class="chevron @(_isLeftCollapsed ? "right" : "left") icon"></i>
+    </a>
+
+      <div class="ui selection dropdown item" style="@(!_gameInformation.MapId.HasValue ? "display: none" : null)">
+        <i class="dropdown icon"></i>
+        <div class="text zoom">@(_selectedZoom)%</div>
+        <div class="menu">
+          @foreach (var increment in _zoomIncrements)
+          {
+            var zoom = increment;
+            <div class="item @(_selectedZoom == zoom ? "active selected" : null) " value="@zoom" @onclick="@(async () => await this.SetZoomAsync(zoom))">@zoom%</div>
+          }
+        </div>
+      </div>
+    @if (_gameInformation.MapId.HasValue)
+    {
+      <a class="item @(_isGridVisible ? "active" : null)" @onclick="@this.ToggleGridAsync">
+        <i class="@(_isGridVisible ? "eye" : "eye slash") icon"></i>
+        Grid
+      </a>
+      @if (_rulesetInformation.IsOwner)
+      {
+      <a class="item" @onclick="@this.ToggleCombatAsync">
+        <i class="@(_gameStateInformation.GameStateMode == GameStateMode.None ? "play" : "stop") icon"></i>
+        @(_gameStateInformation.GameStateMode == GameStateMode.None ? "Start" : "End") Combat
+      </a>
+        }
+      }
+
+    <div class="right menu">
+      <div class="menu">
+        @*<a class="item" data-tooltip="Lock Game" data-position="bottom center">
+          <i class="lock open icon"></i>
+        </a>*@
+        <a class="item" @onclick="@this.ToggleRightCollapseAsync">
+          <i class="chevron @(_isRightCollapsed ? "left" : "right") icon"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+    <div class="ui vertical menu" style="margin: 0rem; position: absolute; z-index: 1; @(!_clientStateInformation.SelectedGameCharacterId.HasValue || !_clientStateInformation.ShowContextMenu ? "display: none" : null)">
+      <a class="item" @onclick="@this.MoveCharacterAsync">
+        Move
+      </a>
+      <div class="ui dropdown item @(this.SelectedGameCharacter == null || this.SelectedGameCharacter.Weapons.Any() ? null : "disabled")">
+        <i class="dropdown icon"></i>
+        Attack
+        <div class="menu">
+          @if (this.SelectedGameCharacter != null)
+          {
+            @foreach (var weapon in this.SelectedGameCharacter.Weapons.OrderBy(n => n.Name))
+            {
+              var weaponId = weapon.WeaponId;
+                <a class="item" @onclick="@(async () => await this.UseWeaponAsync(weaponId))">
+                  @weapon.Name
+                </a>
+            }
+          }
+        </div>
+      </div>
+
+      @*<div class="ui paddingleft pointing dropdown link item">
+        <i class="dropdown icon"></i>
+        Items
+        <div class="menu">
+          <div class="header">Healing</div>
+          <div class="divider"></div>
+          <a class="item">
+            Minor Potion
+            <div class="ui label">2</div>
+          </a>
+        </div>
+      </div>*@
+      <a class="item @(_gameStateInformation.CurrentTurnId != _clientStateInformation.SelectedGameCharacterId ? "disabled" : null)" @onclick="@this.EndTurnAsync">
+        End Turn
+      </a>
+    </div>
+
+  @*<div id="gameContainer" @onwheel="@this.ZoomAsync" @onclick="@this.ContainerClickedAsync" @onmousedown="@this.CancelContainerAsync" @onmouseup="@this.ContainerDragEndAsync">
+  </div>*@
+  <GameCanvas Game="@_gameInformation" GameState="@_gameStateInformation" ClientState="@_clientStateInformation" OnCancel="@this.CancelAsync" OnClicked="@this.ClickedAsync" OnZoom="@this.ZoomAsync" OnDelete="@this.DeleteAsync" OnMoved="@this.MovedAsync"></GameCanvas>
+
+</div>
+
+  @if (!_isRightCollapsed)
+  {
+    <GameChatBar ChatMessages="@_chatMessages" GameHubService="@this.GameHubService" Ruleset="@_rulesetInformation" ClientState="@_clientStateInformation"></GameChatBar>
+  }
+
+</div>
+
+
+
+

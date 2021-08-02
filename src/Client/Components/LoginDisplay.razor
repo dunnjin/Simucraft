@@ -1,0 +1,12 @@
+﻿<AuthorizeView>
+  <Authorized>
+    <a class="ui inverted button" @onclick="@this.SignOutAsync">
+      Sign out
+    </a>
+  </Authorized>
+  <NotAuthorized>
+    <a href="/authentication/login" class="ui inverted button">
+      Sign in
+    </a>
+  </NotAuthorized>
+</AuthorizeView>

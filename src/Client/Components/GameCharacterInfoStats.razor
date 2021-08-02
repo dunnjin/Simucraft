@@ -1,0 +1,99 @@
+﻿@using Simucraft.Client.Core;
+
+<h2 class="ui center aligned icon header">
+  <img class="ui circular image" src="@(this.GameCharacter.ImageUrl ?? "/assets/question-mark.png")" style="width: 6rem; height: 6rem;" />
+  <div class="content">
+    @this.GameCharacter.Name
+    <div class="sub header">@this.GameCharacter.Description</div>
+  </div>
+</h2>
+
+<h4 class="ui center aligned header">
+  STATS
+</h4>
+
+<table class="ui compact small red fixed table">
+  <tbody>
+    <tr>
+      <td class="left aligned">
+        <i class="heart icon"></i>
+        HP
+      </td>
+      <td class="left aligned">
+        @this.GameCharacter.HealthPoints / @this.GameCharacter.CalculateExpression(this.GameCharacter.MaxHealthPoints)
+      </td>
+    </tr>
+    <tr>
+      <td class="left aligned">
+        <i class="level up alternate icon"></i>
+        Level
+      </td>
+      <td class="left aligned">
+        @this.GameCharacter.Level
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <i class="arrows alternate icon"></i>
+        Movement
+      </td>
+      <td>
+        @this.GameCharacter.Movement
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <i class="shopping bag icon"></i>
+        Carrying Capacity
+      </td>
+      <td>
+        @this.GameCharacter.CarryingCapacity / @this.GameCharacter.CalculateExpression(this.GameCharacter.MaxCarryingCapacity)
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <i class="expand icon"></i>
+        Size
+      </td>
+      <td>
+        @this.GameCharacter.Width x @this.GameCharacter.Height
+      </td>
+    </tr>
+    @foreach (var stat in this.GameCharacter.Stats.OrderBy(s => s.Name))
+    {
+      <tr>
+        <td class="infotableitem">
+          @stat.Name
+        </td>
+        <td>
+          @this.GameCharacter.CalculateExpression(stat.Value)
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+<h4 class="ui center aligned header">
+  SKILLS
+</h4>
+@foreach (var group in this.GameCharacter.Skills.GroupBy(s => s.Category?.ToUpper()).OrderBy(s => s.Key))
+{
+  @if (!string.IsNullOrEmpty(group.Key))
+  {
+    <h5 class="ui horizontal divider header">
+      @group.Key
+    </h5>
+  }
+  <table class="ui compact small brown fixed selectable table">
+    <tbody>
+      @foreach (var skill in group.OrderBy(e => e.Name))
+      {
+        <tr>
+          <td @key="skill" class="infotableitem left aligned" @onclick="@(async () => await this.SkillSelectedAsync(skill))">
+            @skill.Name
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

@@ -1,0 +1,58 @@
+﻿@page "/rulesetselectview"
+<div class="ui container">
+  @if (!string.IsNullOrEmpty(_errorMessage))
+  {
+    <div class="ui negative message">
+      <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+      <div class="header">
+        Error
+      </div>
+      <p>@_errorMessage</p>
+    </div>
+  }
+  <h2 class="ui header">
+    <i class="book icon"></i>
+    <div class="content">
+      Select Ruleset Option
+      <div class="sub header">Search for a Shared Ruleset or create your own.</div>
+    </div>
+  </h2>
+  <div class="ui placeholder segment">
+    <div class="ui two column very relaxed stackable grid">
+      <div class="column">
+        <div class="ui primary labeled icon big button" @onclick="@(() => this.NavigationManager.NavigateTo("rulesetcreateview"))">
+          <i class="plus icon"></i>
+          Create New
+        </div>
+      </div>
+      <div class="middle aligned column">
+        <div class="ui secondary labeled icon big button">
+          <i class="search icon"></i>
+          Search
+        </div>
+      </div>
+    </div>
+    <div class="ui vertical divider">
+      Or
+    </div>
+  </div>
+
+    @*<div class="ui link four cards">
+      <div class="grey card" @onclick="@(() => this.NavigationManager.NavigateTo($"rulesetcreateview"))">
+        <div class="content">
+          <div class="header">Empty</div>
+          <div class="description">
+            <p>Build a ruleset from scratch.</p>
+          </div>
+        </div>
+      </div>
+      <div class="grey card" @onclick="@(async () => await this.ImportAsync(Guid.Parse("42a782cf-bbcd-48ca-9207-084cb627a9b8")))">
+        <div class="content">
+          <div class="header">D&D 5th Edition</div>
+          <div class="description">
+            <p>Starter kit for the D&D 5th Edition's core rulebook.</p>
+          </div>
+        </div>
+      </div>
+    </div>*@
+  </div>

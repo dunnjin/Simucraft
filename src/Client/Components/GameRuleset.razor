@@ -1,0 +1,153 @@
+﻿
+  <div class="ui icon fluid input">
+    <input type="text" placeholder="Search..." @bind-value="@_searchInput" />
+    <i class="search icon"></i>
+  </div>
+<div id="gameruleset" class="ui restrict" style="padding-top: 2rem;">
+  @if (this.Ruleset.IsOwner)
+  {
+  <h4 class="ui center aligned header">
+    <i class="ui map icon"></i>
+    MAPS
+  </h4>
+  <div class="ui relaxed middle aligned selection list" style="padding-left: 1rem; padding-right: 1rem;">
+    @foreach (var map in this.Ruleset.Maps.Where(m => string.IsNullOrEmpty(_searchInput) ? true : m.Name.ToLower().Contains(_searchInput.ToLower())).OrderBy(m => m.Name))
+    {
+      var mapId = map.Id;
+      <div class="item @(_selectedMapId == mapId ? "active" : null)" @onclick="@(() => _selectedMapId = _selectedMapId == mapId ? null : (Guid?)mapId)">
+        @if (_selectedMapId == mapId)
+        {
+          <div class="right floated content">
+            <button class="ui compact icon button" @onclick="@(async () => await this.LoadMapAsync())" data-tooltip="Load Map" data-position="left center">
+              <i class="sync icon"></i>
+            </button>
+          </div>
+        }
+        <img class="ui avatar image" src="@map.ImageUrl" />
+        <div class="content">
+          <div class="header">@map.Name</div>
+        </div>
+        @if (!string.IsNullOrEmpty(map.Description) && _selectedMapId == mapId)
+        {
+          <div class="description preservelinespadding">
+            @map.Description
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <h4 class="ui center aligned header">
+    <i class="ui male icon"></i>
+    CHARACTERS
+  </h4>
+  <div class="ui relaxed middle aligned selection list" style="padding-left: 1rem; padding-right: 1rem;">
+    @foreach (var group in this.Ruleset.Characters.GroupBy(c => c.Category.ToUpper()).OrderBy(c => c.Key))
+    {
+      var searchGroup = group.Where(c => string.IsNullOrEmpty(_searchInput) ? true : c.Name.ToLower().Contains(_searchInput.ToLower())).OrderBy(m => m.Name);
+
+      @if (searchGroup.Any())
+      {
+        <h5 class="ui horizontal divider header">
+          @group.Key
+        </h5>
+
+        @foreach (var character in searchGroup)
+        {
+          var characterId = character.Id;
+          <div class="item @(_selectedCharacterId == characterId ? "active" : null)" @onclick="@(() => _selectedCharacterId = _selectedCharacterId == characterId ? null : (Guid?)characterId)">
+            @if (_selectedCharacterId == characterId)
+            {
+              <div class="right floated content">
+                <button class="ui compact icon button" @onclick="@(async () => await this.AddCharacterAsync())" data-tooltip="Add Character to Game" data-position="left center">
+                  <i class="add icon"></i>
+                </button>
+              </div>
+            }
+            <img class="ui avatar image" src="@(string.IsNullOrEmpty(character.ImageUrl) ? "/assets/question-mark.png" : character.ImageUrl)" />
+            <div class="content">
+              <div class="header">@character.Name</div>
+            </div>
+            @if (!string.IsNullOrEmpty(character.Description) && _selectedCharacterId == characterId)
+            {
+              <div class="description preservelinespadding">
+                @character.Description
+              </div>
+            }
+          </div>
+        }
+      }
+    }
+  </div>
+  }
+
+  <h4 class="ui center aligned header">
+    <i class="gavel icon"></i>
+    WEAPONS
+  </h4>
+  <div class="ui relaxed middle aligned selection list" style="padding-left: 1rem; padding-right: 1rem;">
+    @foreach (var group in this.Ruleset.Weapons.GroupBy(c => c.Category.ToUpper()).OrderBy(c => c.Key))
+    {
+      var searchGroup = group.Where(w => string.IsNullOrEmpty(_searchInput) ? true : w.Name.ToLower().Contains(_searchInput.ToLower())).OrderBy(m => m.Name);
+      @if (searchGroup.Any())
+      {
+        <h5 class="ui horizontal divider header">
+          @group.Key
+        </h5>
+
+        @foreach (var weapon in searchGroup)
+        {
+          var weaponId = weapon.Id;
+          <div class="item @(_selectedWeaponId == weaponId ? "active" : null)" @onclick="@(() => _selectedWeaponId = _selectedWeaponId == weaponId ? null : (Guid?)weaponId)">
+            @if (_selectedWeaponId == weaponId)
+            {
+            <div class="right floated content">
+              <div class="ui compact right pointing dropdown icon button" @onclick:stopPropagation data-tooltip="Send To" data-position="left center">
+                <i class="send icon"></i>
+                <div class="menu">
+                  @foreach (var characterGroup in this.GameState.GameCharacters.Where(c => c.UserId == this.ClientState.UserId || this.Ruleset.IsOwner).GroupBy(c => new { c.UserId, DisplayName = this.UserInformation.AuthorizedUsers.FirstOrDefault(u => u.UserId == c.UserId)?.DisplayName.ToUpper()}).OrderBy(s => s.Key.DisplayName))
+                  {
+                    <h4 class="header">
+                      @characterGroup.Key.DisplayName
+                    </h4>
+                    @foreach (var character in characterGroup.OrderBy(c => c.Name))
+                    {
+                      var characterId = character.Id;
+                      <a class="item" @onclick="@(async () => await this.SendWeaponAsync(characterId, weaponId))">
+                        @character.Name
+                      </a>
+                      }
+                    }
+                </div>
+              </div>
+            </div>
+            }
+            <div class="content" style="padding-bottom: 1rem;">
+              <div class="header">@weapon.Name</div>
+            </div>
+            @if (!string.IsNullOrEmpty(weapon.Cost) && _selectedWeaponId == weaponId)
+            {
+              <div class="description">
+                Costs @weapon.Cost
+              </div>
+            }
+
+            @if (_selectedWeaponId == weaponId)
+            {
+              <div class="description"> 
+                Range @weapon.Range Weight @weapon.Weight
+              </div>
+            }
+
+            @if (!string.IsNullOrEmpty(weapon.Description) && _selectedWeaponId == weaponId)
+            {
+              <div class="description">
+                @weapon.Description
+              </div>
+            }
+          </div>
+          }
+        }
+      }
+  </div>
+</div>

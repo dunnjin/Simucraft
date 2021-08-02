@@ -1,0 +1,566 @@
+﻿@using Simucraft.Client.Common; 
+@using Simucraft.Client.Models;
+
+  @if (!string.IsNullOrEmpty(_errorMessage))
+  {
+    <div class="ui negative message">
+      <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+      <div class="header">
+        Error
+      </div>
+      <p>@_errorMessage</p>
+    </div>
+  }
+  <h2 class="ui header">
+    @if (_isListView)
+    {
+      <a class="ui right floated positive basic button" @onclick="@(() => this.NavigateToCreate(null))">
+        <i class="add icon"></i>
+        Create
+      </a>
+    }
+    <i class="briefcase icon" />
+    <div class="content">
+      Equipment
+      <div class="sub header">Set different types of Equipment for a Character to let them use Weapons, Armor, or other custom Active and Passive effects.</div>
+    </div>
+  </h2>
+
+  @if (_isListView)
+  {
+    @foreach (var weaponGroup in this.Ruleset.Equipment.GroupBy(w => w.Category.ToUpper()).OrderBy(w => w.Key))
+    {
+      <h4 class="ui dividing header">
+        @weaponGroup.Key
+      </h4>
+      <div class="ui link four cards">
+        @foreach (var weapon in weaponGroup.OrderBy(e => e.Name).ThenBy(c => c.Id))
+        {
+          var id = weapon.Id;
+          <div class="black card" @onclick="@(() => this.NavigateToCreate(id))">
+            <div class="content">
+              <div class="header">@weapon.Name</div>
+              <div class="description">
+                <p>@weapon.Description?.TruncateWithTrail(300)</p>
+              </div>
+            </div>
+            <div class="extra content">
+              <a class="left floated like" @onclick="@(async () => await this.CopyAsync(id))" @onclick:stopPropagation>
+                <i class="copy icon grey"></i>
+                Copy
+              </a>
+              <a class="right floated delete" @onclick="@(async () => await this.PromptDeleteAsync(id))" @onclick:stopPropagation>
+                <i class="delete icon red"></i>
+                Delete
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+  else
+  {
+<EditForm OnSubmit="@this.SubmitAsync" EditContext="@_editContextValidator.EditContext" class="ui form">
+  <DataAnnotationsValidator></DataAnnotationsValidator>
+  <div class="two fields">
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.Name)) ? "error" : null)">
+      <label data-tooltip="The Name of the Equipment" data-position="top left">
+        Name
+      </label>
+      <InputText class="focus ui input" type="text" placeholder="Name" maxlength="50" @bind-Value="_equipment.Name" />
+      @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.Name)))
+      {
+        <div class="ui pointing red basic label">
+          <ValidationMessage For="@(() => _equipment.Name)"></ValidationMessage>
+        </div>
+      }
+    </div>
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.Category)) ? "error" : null)">
+      <label data-tooltip="How the Equipment should be grouped by" data-position="top left">
+        Category
+      </label>
+      <InputText class="ui input" type="text" placeholder="Category" maxlength="50" @bind-Value="_equipment.Category" />
+      @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.Category)))
+      {
+        <div class="ui pointing red basic label">
+          <ValidationMessage For="@(() => _equipment.Category)"></ValidationMessage>
+        </div>
+      }
+    </div>
+  </div>
+  <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.Description)) ? "error" : null)">
+    <label data-tooltip="A brief description of the Equipment" data-position="top left">
+      Description
+    </label>
+    <InputTextArea class="ui input noresize" type="text" rows="2" placeholder="Describe the Equipment" maxlength="1000" @bind-Value="_equipment.Description" />
+    @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.Description)))
+    {
+      <div class="ui pointing red basic label">
+        <ValidationMessage For="@(() => _equipment.Description)"></ValidationMessage>
+      </div>
+    }
+  </div>
+  <div class="two fields">
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.Cost)) ? "error" : null)">
+      <label data-tooltip="The base price for the Equipment" data-position="top left">
+        Cost
+      </label>
+      <InputText class="ui input" placeholder="1 gold" maxlength="50" @bind-Value="@_equipment.Cost"></InputText>
+      @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.Cost)))
+      {
+        <div class="ui pointing red basic label">
+          <ValidationMessage For="@(() => _equipment.Cost)"></ValidationMessage>
+        </div>
+      }
+    </div>
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.Weight)) ? "error" : null)">
+      <label data-tooltip="Affects the Characters carrying capacity" data-position="top left">
+        Weight
+      </label>
+      <InputNumber class="ui input" placeholder="1" min="0" max="1000" @bind-Value="@_equipment.Weight"></InputNumber>
+      @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.Weight)))
+      {
+        <div class="ui pointing red basic label">
+          <ValidationMessage For="@(() => _equipment.Weight)"></ValidationMessage>
+        </div>
+      }
+    </div>
+  </div>
+  <div class="ui divider"></div>
+  <div class="field">
+    <select class="ui dropdown" @bind="@this.EquipmentType">
+      <option value="@EquipmentType.Active">Weapon</option>
+      <option value="@EquipmentType.Passive">Armor</option>
+      <option value="@EquipmentType.Both">Other</option>
+    </select>
+  </div>
+
+  @if (_equipment.EquipmentTypeParsed == EquipmentType.Passive)
+  {
+    <div class="fields">
+      <div class="fifteen wide field">
+        <div class="ui visible message">
+          <i class="shield icon"></i>
+          Armor is a passive effect that will apply to a Character when equipped.
+        </div>
+      </div>
+      <div class="one wide field">
+        <button type="button" class="ui right floated positive basic icon button @(_equipment.PassiveExpressions.Count >= 5 ? "disabled" : null)" @onclick="@this.AddExpression" data-tooltip="Add Roll" data-position="top left">
+          <i class="add icon"></i>
+        </button>
+      </div>
+    </div>
+
+    @foreach (var expression in _equipment.PassiveExpressions.Select((e, i) => new { Index = i, Equipment = e }))
+    {
+      var expressionIndex = expression.Index;
+
+      <div class="fields">
+        <div class="six wide field @(_invalidExpressionSelf.Contains(expressionIndex) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Character" maxlength="200" @bind-Value="@expression.Equipment.SelfExpression"></InputText>
+          @if (_invalidExpressionSelf.Contains(expressionIndex))
+          {
+            <div class="ui pointing red basic label">
+              Character Roll must result in a valid number.
+            </div>
+          }
+        </div>
+        <div class="three wide field">
+          <select class="ui dropdown" @bind="@expression.Equipment.OperatorExpression">
+            <option value="=">=</option>
+            <option value="+=">+</option>
+            <option value="-=">-</option>
+          </select>
+        </div>
+        <div class="six wide field @(_invalidExpressionTarget.Contains(expressionIndex) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Target" maxlength="200" @bind-Value="@expression.Equipment.TargetExpression"></InputText>
+          @if (_invalidExpressionTarget.Contains(expressionIndex))
+          {
+            <div class="ui pointing red basic label">
+              Target Roll must result in a valid number.
+            </div>
+          }
+        </div>
+        <div class="one wide field">
+          <button type="button" class="ui right floated red basic icon button" @onclick="@(() => this.RemoveExpression(expressionIndex))">
+            <i class="delete icon"></i>
+          </button>
+        </div>
+      </div>
+    }
+
+    <div class="two fields">
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.ResistanceTraits)) ? "error" : null)">
+        <label data-tooltip="Determines which damage types the Equipment will take half damage from." data-position="top left">
+          Resistances
+        </label>
+        <InputText class="ui input" type="text" placeholder="Resistances" maxlength="200" @bind-Value="@_equipment.ResistanceTraits"></InputText>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.ResistanceTraits)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _equipment.ResistanceTraits)"></ValidationMessage>
+          </div>
+        }
+      </div>
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.ImmunityTraits)) ? "error" : null)">
+        <label data-tooltip="Determines which damage types the Equipment will take no damage from." data-position="top left">
+          Immunities
+        </label>
+        <InputText class="ui input" type="text" placeholder="Immunities" maxlength="200" @bind-Value="@_equipment.ImmunityTraits"></InputText>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.ImmunityTraits)))
+        { 
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _equipment.ImmunityTraits)"></ValidationMessage>
+          </div>
+        }
+      </div>
+    </div>
+  }
+  else if (_equipment.EquipmentTypeParsed == EquipmentType.Active)
+  {
+    <div class="field">
+      <div class="ui visible message">
+        <i class="gavel icon"></i>
+        A Weapon is an active effect that can do damage to a target when equipped by a Character.
+      </div>
+    </div>
+    <div class="field">
+      <label data-tooltip="The Roll that will determine whether the Weapon will hit its Target" data-position="top left">
+        Hit Chance
+      </label>
+      <div class="fields">
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.HitChanceSelfExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Character" maxlength="200" @bind-Value="@_equipment.HitChanceSelfExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.HitChanceSelfExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.HitChanceSelfExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="four wide field">
+          <select class="ui dropdown" @bind="@_equipment.HitChanceOperatorExpression">
+            <option value="<">&lt;</option>
+            <option value=">">&gt;</option>
+            <option value="=">=</option>
+          </select>
+        </div>
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.HitChanceTargetExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Target" maxlength="200" @bind-Value="@_equipment.HitChanceTargetExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.HitChanceTargetExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.HitChanceTargetExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label data-tooltip="The Roll that will determine whether the Weapon will critically hit its Target" data-position="top left">
+        Critical Hit Chance
+      </label>
+      <div class="fields">
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalHitChanceSelfExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Character" maxlength="200" @bind-Value="@_equipment.CriticalHitChanceSelfExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalHitChanceSelfExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.CriticalHitChanceSelfExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="four wide field">
+          <select class="ui dropdown" @bind="@_equipment.CriticalHitChanceOperatorExpression">
+            <option value="<">&lt;</option>
+            <option value=">">&gt;</option>
+            <option value="=">=</option>
+          </select>
+        </div>
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalHitChanceTargetExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Target" maxlength="200" @bind-Value="@_equipment.CriticalHitChanceTargetExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalHitChanceTargetExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.CriticalHitChanceTargetExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label data-tooltip="The Roll that determines the base and crtical damage of the Weapon" data-position="top left">
+        Damage
+      </label>
+      <div class="fields">
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.DamageExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Base" maxlength="200" @bind-Value="@_equipment.DamageExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.DamageExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.DamageExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="four wide field">
+          <select class="ui dropdown" @bind="@_equipment.DamageExpression">
+            <option value="+">+</option>
+            <option value="*">*</option>
+          </select>
+        </div>
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalDamageExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Critical" maxlength="200" @bind-Value="@_equipment.CriticalDamageExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalDamageExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.CriticalDamageExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="two fields">
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.DamageTraits)) ? "error" : null)">
+        <label data-tooltip="Determines the damage types the Weapon will inflict." data-position="top left">
+          Damage Types
+        </label>
+        <InputText class="ui input" type="text" placeholder="Damage Types" maxlength="200" @bind-Value="@_equipment.DamageTraits"></InputText>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.DamageTraits)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _equipment.DamageTraits)"></ValidationMessage>
+          </div>
+        }
+      </div>
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.Range)) ? "error" : null)">
+        <label data-tooltip="The number of tiles the Weapon can reach" data-position="top left">
+          Range
+        </label>
+        <InputNumber @bind-Value="@_equipment.Range" min="1" max="1000"></InputNumber>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.Range)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _equipment.Range)"></ValidationMessage>
+          </div>
+        }
+      </div>
+    </div>
+  }
+  else
+  {
+    <div class="fields">
+      <div class="fifteen wide field">
+        <div class="ui visible message">
+          <i class="gem icon"></i>
+          Other is a custom effect that can do damage to a target and apply passive effects to a Character when equipped.
+        </div>
+      </div>
+      <div class="one wide field">
+        <button type="button" class="ui right floated positive basic icon button @(_equipment.PassiveExpressions.Count >= 5 ? "disabled" : null)" @onclick="@this.AddExpression" data-tooltip="Add Roll" data-position="top left">
+          <i class="add icon"></i>
+        </button>
+      </div>
+    </div>
+
+    @foreach (var expression in _equipment.PassiveExpressions.Select((e, i) => new { Index = i, Equipment = e }))
+    {
+      var expressionIndex = expression.Index;
+
+      <div class="fields">
+
+        <div class="six wide field @(_invalidExpressionSelf.Contains(expressionIndex) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Character" maxlength="200" @bind-Value="@expression.Equipment.SelfExpression"></InputText>
+          @if (_invalidExpressionSelf.Contains(expressionIndex))
+          {
+            <div class="ui pointing red basic label">
+              Character Roll must result in a valid number.
+            </div>
+          }
+        </div>
+        <div class="three wide field">
+          <select class="ui dropdown" @bind="@expression.Equipment.OperatorExpression">
+            <option value="=">=</option>
+            <option value="+=">+</option>
+            <option value="-=">-</option>
+          </select>
+        </div>
+        <div class="six wide field @(_invalidExpressionTarget.Contains(expressionIndex) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Target" maxlength="200" @bind-Value="@expression.Equipment.TargetExpression"></InputText>
+          @if (_invalidExpressionTarget.Contains(expressionIndex))
+          {
+            <div class="ui pointing red basic label">
+              Target Roll must result in a valid number.
+            </div>
+          }
+        </div>
+        <div class="one wide field">
+          <button type="button" class="ui right floated red basic icon button" @onclick="@(() => this.RemoveExpression(expressionIndex))">
+            <i class="delete icon"></i>
+          </button>
+        </div>
+      </div>
+    }
+    <div class="two fields">
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.ResistanceTraits)) ? "error" : null)">
+        <label data-tooltip="Determines which damage types the Equipment will take half damage from." data-position="top left">
+          Resistances
+        </label>
+        <InputText class="ui input" type="text" placeholder="Resistances" maxlength="200" @bind-Value="@_equipment.ResistanceTraits"></InputText>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.ResistanceTraits)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _equipment.ResistanceTraits)"></ValidationMessage>
+          </div>
+        }
+      </div>
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.ImmunityTraits)) ? "error" : null)">
+        <label data-tooltip="Determines which damage types the Equipment will take no damage from." data-position="top left">
+          Immunities
+        </label>
+        <InputText class="ui input" type="text" placeholder="Immunities" maxlength="200" @bind-Value="@_equipment.ImmunityTraits"></InputText>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.ImmunityTraits)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _equipment.ImmunityTraits)"></ValidationMessage>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="ui divider"></div>
+    <div class="field">
+      <label data-tooltip="The Roll that will determine whether the Weapon will hit its Target" data-position="top left">
+        Hit Chance
+      </label>
+      <div class="fields">
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.HitChanceSelfExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Character" maxlength="200" @bind-Value="@_equipment.HitChanceSelfExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.HitChanceSelfExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.HitChanceSelfExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="four wide field">
+          <select class="ui dropdown" @bind="@_equipment.HitChanceOperatorExpression">
+            <option value="<">&lt;</option>
+            <option value=">">&gt;</option>
+            <option value="=">=</option>
+          </select>
+        </div>
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.HitChanceTargetExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Target" maxlength="200" @bind-Value="@_equipment.HitChanceTargetExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.HitChanceTargetExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.HitChanceTargetExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label data-tooltip="The Roll that will determine whether the Weapon will critically hit its Target" data-position="top left">
+        Critical Hit Chance
+      </label>
+      <div class="fields">
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalHitChanceSelfExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Character" maxlength="200" @bind-Value="@_equipment.CriticalHitChanceSelfExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalHitChanceSelfExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.CriticalHitChanceSelfExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="four wide field">
+          <select class="ui dropdown" @bind="@_equipment.CriticalHitChanceOperatorExpression">
+            <option value="<">&lt;</option>
+            <option value=">">&gt;</option>
+            <option value="=">=</option>
+          </select>
+        </div>
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalHitChanceTargetExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Target" maxlength="200" @bind-Value="@_equipment.CriticalHitChanceTargetExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalHitChanceTargetExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.CriticalHitChanceTargetExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label data-tooltip="The Roll that determines the base and crtical damage of the Weapon" data-position="top left">
+        Damage
+      </label>
+      <div class="fields">
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.DamageExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Base" maxlength="200" @bind-Value="@_equipment.DamageExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.DamageExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.DamageExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="four wide field">
+          <select class="ui dropdown" @bind="@_equipment.DamageExpression">
+            <option value="+">+</option>
+            <option value="*">*</option>
+          </select>
+        </div>
+        <div class="six wide field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalDamageExpression)) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Critical" maxlength="200" @bind-Value="@_equipment.CriticalDamageExpression"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.CriticalDamageExpression)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _equipment.CriticalDamageExpression)"></ValidationMessage>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.DamageTraits)) ? "error" : null)">
+        <label data-tooltip="Determines the damage types the Equipment will inflict." data-position="top left">
+          Damage Types
+        </label>
+        <InputText class="ui input" type="text" placeholder="Damage Types" maxlength="200" @bind-Value="@_equipment.DamageTraits"></InputText>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.DamageTraits)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _equipment.DamageTraits)"></ValidationMessage>
+          </div>
+        }
+      </div>
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_equipment.Range)) ? "error" : null)">
+        <label data-tooltip="The number of tiles the Equipment can reach" data-position="top left">
+          Range
+        </label>
+        <InputNumber @bind-Value="@_equipment.Range" min="1" max="1000"></InputNumber>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_equipment.Range)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _equipment.Range)"></ValidationMessage>
+          </div>
+        }
+      </div>
+    </div>
+
+  }
+  <div class="two fields">
+    <div class="field">
+      <button class="ui fluid large submit primary button @(_isSaving ? "loading disabled" : null)">Save</button>
+    </div>
+    <div class="field">
+      <button type="button" class="ui fluid large button @(_isSaving ? "disabled" : null)" @onclick="() => _isListView = true">Cancel</button>
+    </div>
+  </div>
+</EditForm>
+  }
+<DeleteConfirmation ItemType="Equipment" ConfirmClicked="@this.DeleteAsync"></DeleteConfirmation>
+

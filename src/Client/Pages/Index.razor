@@ -1,0 +1,79 @@
+﻿@page "/"
+
+<div class="ui inverted vertical center aligned segment indexsegment">
+  <div class="ui text container">
+    <h1 class="ui inverted header">
+      Simucraft Alpha
+    </h1>
+    <h3>
+      Are you new here?
+    </h3>
+    <div class="ui huge primary button" @onclick="@(() => this.NavigationManager.NavigateTo("/rulesetselectview"))">
+      Get Started
+      <i class="right arrow icon"></i>
+    </div>
+  </div>
+</div>
+
+
+<div class="ui basic segment" style="padding-top: 5em;">
+
+  <div class="ui container">
+    <div class="ui icon warning message">
+      <i class="exclamation triangle icon"></i>
+      <div class="content">
+        <div class="header">
+          Alpha Warning
+        </div>
+        <p>
+          Simucraft is in development. Everything is subject to change, and all user data will be removed upon release of the Beta.
+        </p>
+      </div>
+    </div>
+    <h4 class="ui header">
+      Upcoming Features
+    </h4>
+    <div class="ui bulleted list">
+      <div class="item">
+        Editing Characters in Game
+      </div>
+      <div class="item">
+        Changing turn order during combat
+      </div>
+      <div class="item">
+        Fog of War
+      </div>
+      <div class="item">
+        Improved combat logs
+      </div>
+      <div class="item">
+        Spells
+      </div>
+      <div class="item">
+        Equipment
+      </div>
+      <div class="item">
+        Abilities
+      </div>
+      <div class="item">
+        Items
+      </div>
+      <div class="item">
+        Resizing Maps
+      </div>
+      <div class="item">
+        Pinging other Players in Game
+      </div>
+      <div class="item">
+        Map Effects
+      </div>
+      <div class="item">
+        Game Notes
+      </div>
+      <div class="item">
+        Pausing a Game
+      </div>
+    </div>
+  </div>
+</div>
+

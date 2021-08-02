@@ -1,0 +1,100 @@
+﻿@inherits LayoutComponentBase
+
+  <!-- Sidebar -->
+  <div id="main" class="ui left inline inverted vertical sidebar menu">
+    <div class="item">
+      <a class="ui logout icon image">
+        <img class="ui mini image" src="/assets/logo.png" />
+      </a>
+  <AuthorizeView>
+    <Authorized>
+      <a>
+        <b style="padding-left: 1rem;">
+           @context.User.Identity.Name
+        </b>
+      </a>
+    </Authorized>
+    <NotAuthorized>
+      <a>
+        <b style="padding-left: 1rem;">
+          Welcome
+        </b>
+      </a>
+    </NotAuthorized>
+  </AuthorizeView>
+    </div>
+    <a class="item" href="/rulesetlist" @onclick="@this.ToggleAsync">
+      <i class="book icon"></i>
+      Rulesets
+    </a>
+    <a class="item" href="/maplist" @onclick="@this.ToggleAsync">
+      <i class="map icon"></i>
+      Maps
+    </a>
+    <a class="item" href="/gamelist" @onclick="@this.ToggleAsync">
+      <i class="gamepad icon"></i>
+      Games
+    </a>
+    @*<a class="item button" href="/">
+      <i class="history icon"></i>
+      Subscription
+    </a>*@
+    </div>
+    <!--<div class="item">
+      <a class="header" href="/dashboard">Dashboard</a>
+      <div class="menu">
+        <a class="item" href="/rulesetlist" @onclick="@this.ToggleAsync">
+          <i class="book icon"></i>
+          Rulesets
+        </a>
+        <a class="item" href="/maplist" @onclick="@this.ToggleAsync">
+          <i class="map icon"></i>
+          Maps
+        </a>
+        <a class="item" href="/gamelist" @onclick="@this.ToggleAsync">
+          <i class="gamepad icon"></i>
+          Games
+        </a>
+      </div>
+    </div>
+    <div class="item">
+      <a class="header" href="/">Social</a>
+      <div class="menu">
+        <a class="item" href="/">-->
+          <!-- TODO: Show number of invites, use open icon when > 0 -->
+          <!--<i class="envelope icon"></i>
+          Invites
+        </a>
+      </div>
+    </div>
+    <div class="item">
+      <a class="header" href="/dashboard">Account</a>
+      <div class="menu">
+        <a class="item toggle button" href="/">
+          <i class="history icon"></i>
+          Subscription
+        </a>
+      </div>
+    </div>
+  </div>-->
+
+<!-- Navbar -->
+<div class="ui borderless top fluid inverted fixed menu">
+  <a class="item toggle button" @onclick="@this.ToggleAsync">
+    <i class="sidebar icon"></i>
+  </a>
+  <a href="/" class="item header item" data-tooltip="@_version" data-position="bottom center">
+    Simucraft
+  </a>
+  <div class="right item">
+    <LoginDisplay></LoginDisplay>
+  </div>
+</div>
+
+  <!-- Content -->
+  <div class="pusher pushable">
+    <div class="ui basic segment" style="padding-top: 5em;">
+      @Body
+    </div>
+  </div>
+

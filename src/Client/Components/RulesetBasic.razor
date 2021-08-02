@@ -1,0 +1,65 @@
+﻿@using Simucraft.Client.Models; 
+
+  @if (!string.IsNullOrEmpty(_errorMessage))
+  {
+  <div class="ui negative message">
+    <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+    <div class="header">
+      Error
+    </div>
+    <p>@_errorMessage</p>
+  </div>
+  }
+  <h2 class="ui header">
+    <i class="book icon"></i>
+    <div class="content">
+      Basic Rules
+      <div class="sub header">Update the rules that apply to the entire Game.</div>
+    </div>
+  </h2>
+  <EditForm OnSubmit="@this.SubmitAsync" EditContext="@_editContextValidator.EditContext" class="ui form">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_ruleset.Name)) ? "error" : null)">
+      <label>Name</label>
+      <InputText class="focus ui input" type="text" placeholder="Ruleset Name" maxlength="50" @bind-Value="_ruleset.Name" />
+      <div class="ui pointing red basic label" style="@(!_editContextValidator.IsFieldValidated(nameof(_ruleset.Name)) ? null : "display: none")">
+        <ValidationMessage For="@(() => _ruleset.Name)"></ValidationMessage>
+      </div>
+    </div>
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_ruleset.Description)) ? "error" : null)">
+      <label>Description</label>
+      <InputTextArea class="ui input noresize" rows="2" maxlength="1000" placeholder="Describe the Ruleset" @bind-Value="_ruleset.Description" />
+      <div class="ui pointing red basic label" style="@(!_editContextValidator.IsFieldValidated(nameof(_ruleset.Description)) ? null : "display: none")">
+        <ValidationMessage For="@(() => _ruleset.Description)"></ValidationMessage>
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>
+          How many spaces does it take to move to a diagonal tile?
+        </label>
+        <select class="ui dropdown" @bind="@_ruleset.MovementOffset">
+          <option value="2">1</option>
+          <option value="3">1.5</option>
+          <option value="4">2</option>
+        </select>
+      </div>
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_ruleset.TurnOrderExpression)) ? "error" : null)">
+        <label>How is the turn order determined?</label>
+        <InputText class="focus ui input" type="text" placeholder="1d20 + Dexterity Modifier" maxlength="200" @bind-Value="_ruleset.TurnOrderExpression" />
+        <div class="ui pointing red basic label" style="@(!_editContextValidator.IsFieldValidated(nameof(_ruleset.TurnOrderExpression)) ? null : "display: none")">
+          <ValidationMessage For="@(() => _ruleset.TurnOrderExpression)"></ValidationMessage>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="ui toggle checkbox">
+        <InputCheckbox @bind-Value="@_ruleset.AutoApplyDamage" />
+        <label>Automatically apply damage during combat</label>
+      </div>
+    </div>
+    <br />
+   <div class="field">
+      <button id="saveButton" class="ui fluid large submit primary button @(_isSaving ? "loading disabled" : null)">Save</button>
+    </div>
+  </EditForm>

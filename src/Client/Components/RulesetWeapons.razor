@@ -1,0 +1,274 @@
+﻿@using Simucraft.Client.Common; 
+
+  @if (!string.IsNullOrEmpty(_errorMessage))
+  {
+    <div class="ui negative message">
+      <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+      <div class="header">
+        Error
+      </div>
+      <p>@_errorMessage</p>
+    </div>
+  }
+  <h2 class="ui header">
+    @if (_isListView)
+    {
+      <a class="ui right floated positive basic button" @onclick="@(() => this.NavigateToCreate(null))">
+        <i class="add icon"></i>
+        Create
+      </a>
+    }
+    <i class="briefcase icon" />
+    <div class="content">
+      Equipment
+      <div class="sub header">Set different types of Equipment for a Character to let them use Weapons, Armor, or other custom Active and Passive effects.</div>
+    </div>
+  </h2>
+
+  @if (_isListView)
+  {
+    @foreach (var weaponGroup in this.Ruleset.Weapons.GroupBy(w => w.Category.ToUpper()).OrderBy(w => w.Key))
+    {
+      <h4 class="ui dividing header">
+        @weaponGroup.Key
+      </h4>
+      <div class="ui link four cards">
+        @foreach (var weapon in weaponGroup.OrderBy(e => e.Name).ThenBy(c => c.Id))
+        {
+          var id = weapon.Id;
+          <div class="black card" @onclick="@(() => this.NavigateToCreate(id))">
+            <div class="content">
+              <div class="header">@weapon.Name</div>
+              <div class="description">
+                <p>@weapon.Description?.TruncateWithTrail(300)</p>
+              </div>
+            </div>
+            <div class="extra content">
+              <a class="left floated like" @onclick="@(async () => await this.CopyAsync(id))" @onclick:stopPropagation>
+                <i class="copy icon grey"></i>
+                Copy
+              </a>
+              <a class="right floated delete" @onclick="@(async () => await this.PromptDeleteAsync(id))" @onclick:stopPropagation>
+                <i class="delete icon red"></i>
+                Delete
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+  else
+  {
+    <EditForm OnSubmit="@this.SubmitAsync" EditContext="@_editContextValidator.EditContext" class="ui form">
+      <DataAnnotationsValidator></DataAnnotationsValidator>
+      <div class="two fields">
+        <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.Name)) ? "error" : null)">
+          <label data-tooltip="The Name of the Weapon" data-position="top left">
+            Name
+          </label>
+          <InputText class="focus ui input" type="text" placeholder="Name" maxlength="50" @bind-Value="_weapon.Name" />
+          @if (!_editContextValidator.IsFieldValidated(nameof(_weapon.Name)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _weapon.Name)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.Category)) ? "error" : null)">
+          <label data-tooltip="How the Weapon should be grouped by" data-position="top left">
+            Category
+          </label>
+            <InputText class="ui input" type="text" placeholder="Category" maxlength="50" @bind-Value="_weapon.Category" />
+            @if (!_editContextValidator.IsFieldValidated(nameof(_weapon.Category)))
+            {
+              <div class="ui pointing red basic label">
+                <ValidationMessage For="@(() => _weapon.Category)"></ValidationMessage>
+              </div>
+            }
+        </div>
+      </div>
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.Description)) ? "error" : null)">
+        <label data-tooltip="A brief description of the Weapon" data-position="top left">
+          Description
+        </label>
+        <InputTextArea class="ui input noresize" type="text" rows="2" placeholder="Describe the Weapon" maxlength="1000" @bind-Value="_weapon.Description" />
+        @if (!_editContextValidator.IsFieldValidated(nameof(_weapon.Description)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _weapon.Description)"></ValidationMessage>
+          </div>
+        }
+      </div>
+      <div class="two fields">
+        <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.DamageTypes)) ? "error" : null)">
+          <label data-tooltip="A list of Damage Types for the Weapon, this is used for determining things like resistances, weaknesses, immunities, etc" data-position="top left">
+            Damage Types
+          </label>
+          <InputText class="ui input" type="text" placeholder="slashing magic" maxlength="200" @bind-Value="_weapon.DamageTypes" />
+          @if (!_editContextValidator.IsFieldValidated(nameof(_weapon.DamageTypes)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _weapon.DamageTypes)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.Range)) ? "error" : null)">
+          <label data-tooltip="The number of tiles the Weapon can reach" data-position="top left">
+            Range
+          </label>
+          <InputNumber @bind-Value="@_weapon.Range" min="1" max="1000"></InputNumber>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_weapon.Range)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _weapon.Range)"></ValidationMessage>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="two fields">
+        <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.Cost)) ? "error" : null)">
+          <label data-tooltip="The base price for the Weapon." data-position="top left">
+            Cost
+          </label>
+          <InputText class="ui input" placeholder="1 gold" maxlength="50" @bind-Value="@_weapon.Cost"></InputText>
+          @if(!_editContextValidator.IsFieldValidated(nameof(_weapon.Cost)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _weapon.Cost)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.Weight)) ? "error" : null)">
+          <label data-tooltip="Affects the Characters carrying capacity." data-position="top left">
+            Weight
+          </label>
+          <InputNumber class="ui input" placeholder="1" min="0" max="1000" @bind-Value="@_weapon.Weight"></InputNumber>
+          @if(!_editContextValidator.IsFieldValidated(nameof(_weapon.Weight)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _weapon.Weight)"></ValidationMessage>
+            </div>
+          }
+        </div>
+      </div>
+      <h5 class="ui dividing header">
+        Hit Chance
+      </h5>
+      <div class="fields">
+        <div class="seven wide field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.HitChanceSelf)) ? "error" : null)">
+          <label data-tooltip="This is the equation for the Character who is doing the damage" data-position="top left">
+            Character
+          </label>
+          <InputText class="ui input" type="text" placeholder="1d20" maxlength="200" @bind-Value="@_weapon.HitChanceSelf"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_weapon.HitChanceSelf)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _weapon.HitChanceSelf)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="three wide field">
+          <label>&nbsp;</label>
+          <select class="ui dropdown" @bind="@_weapon.HitChanceOperator">
+            <option value="<">&lt;</option>
+            <option value=">">&gt;</option>
+            <option value="=">=</option>
+          </select>
+        </div>
+        <div class="seven wide field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.HitChanceTarget)) ? "error" : null)">
+          <label data-tooltip="This is the equation for the Target who is taking the damage" data-position="top left">
+            Target
+          </label>
+          <InputText class="ui input" type="text" placeholder="dodge" maxlength="200" @bind-Value="@_weapon.HitChanceTarget"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_weapon.HitChanceTarget)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _weapon.HitChanceTarget)"></ValidationMessage>
+            </div>
+          }
+        </div>
+      </div>
+      <h5 class="ui dividing header">
+        Critical Chance
+      </h5>
+      <div class="fields">
+        <div class="seven wide field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.CriticalChanceSelf)) ? "error" : null)">
+          <label data-tooltip="This is the equation for the Character who is doing the damage" data-position="top left">
+            Character
+          </label>
+          <InputText class="ui input" type="text" placeholder="hitchance" maxlength="200" @bind-Value="@_weapon.CriticalChanceSelf"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_weapon.CriticalChanceSelf)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _weapon.CriticalChanceSelf)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="two wide field">
+          <label>&nbsp;</label>
+          <select class="ui dropdown" @bind="@_weapon.CriticalChanceOperator">
+            <option value="<">&lt;</option>
+            <option value=">">&gt;</option>
+            <option value="=">=</option>
+          </select>
+        </div>
+        <div class="seven wide field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.CriticalChanceTarget)) ? "error" : null)">
+          <label data-tooltip="This is the equation for the Target who is taking the damage" data-position="top left">
+            Target
+          </label>
+          <InputText class="ui input" type="text" placeholder="20 + strmod" maxlength="200" @bind-Value="@_weapon.CriticalChanceTarget"></InputText>
+          @if (!_editContextValidator.IsFieldValidated(nameof(_weapon.CriticalChanceTarget)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _weapon.CriticalChanceTarget)"></ValidationMessage>
+            </div>
+          }
+        </div>
+      </div>
+      <h5 class="ui dividing header">Damage</h5>
+      <div class="fields">
+        <div class="seven wide field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.Damage)) ? "error" : null)">
+          <label data-tooltip="This is Damage against the Target which gets added when the Hit Chance condition is met" data-position="top left">
+            Base
+          </label>
+          <InputText class="ui input" type="text" placeholder="1d10 + strmod" maxlength="200" @bind-Value="@_weapon.Damage" />
+          @if (!_editContextValidator.IsFieldValidated(nameof(_weapon.Damage)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _weapon.Damage)"></ValidationMessage>
+            </div>
+          }
+        </div>
+        <div class="three wide field">
+          <label>&nbsp;</label>
+          <select class="ui dropdown" @bind="@_weapon.DamageOperator">
+            <option value="*">*</option>
+            <option value="+">+</option>
+          </select>
+        </div>
+        <div class="seven wide field @(!_editContextValidator.IsFieldValidated(nameof(_weapon.CriticalDamage)) ? "error" : null)">
+          <label data-tooltip="This is additional Damage which gets added when the Critical Chance condition is met" data-position="top left">
+            Critical Damage
+          </label>
+          <InputText class="ui input" type="text" placeholder="1d10 + strmod" maxlength="200" @bind-Value="@_weapon.CriticalDamage" />
+          @if (!_editContextValidator.IsFieldValidated(nameof(_weapon.CriticalDamage)))
+          {
+            <div class="ui pointing red basic label">
+              <ValidationMessage For="@(() => _weapon.CriticalDamage)"></ValidationMessage>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="two fields">
+        <div class="field">
+          <button class="ui fluid large submit primary button @(_isSaving ? "loading disabled" : null)">Save</button>
+        </div>
+        <div class="field">
+          <button type="button" class="ui fluid large button @(_isSaving ? "disabled" : null)" @onclick="() => _isListView = true">Cancel</button>
+        </div>
+      </div>
+    </EditForm>
+  }
+<DeleteConfirmation ItemType="Weapon" ConfirmClicked="@this.DeleteAsync"></DeleteConfirmation>
+

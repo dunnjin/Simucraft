@@ -1,0 +1,110 @@
+﻿@using Simucraft.Client.Components;
+
+@page "/maplist"
+
+<div class="ui container">
+  <h2 class="ui header">
+    <a href="/mapcreateview" class="ui right floated positive basic button">
+      <i class="add icon"></i>
+      Create
+    </a>
+    <i class="map icon"></i>
+    <div class="content">
+      Maps
+      <div class="sub header">Create or edit a Map that can be used in a Game.</div>
+    </div>
+  </h2>
+  @if (!string.IsNullOrEmpty(_errorMessage))
+  {
+  <div class="ui negative message">
+    <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+    <div class="header">
+      Error
+    </div>
+    <p>@_errorMessage</p>
+  </div>  
+  }
+  @if (!_isInitialized)
+  {
+<div class="ui link four cards">
+  @foreach (var _ in Enumerable.Range(1, 4))
+  {
+    <div class="ui green card">
+      <div class="image">
+        <div class="ui placeholder">
+          <div class="square image"></div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="ui placeholder">
+          <div class="header">
+            <div class="very short line"></div>
+          </div>
+          <div class="paragraph">
+            <div class="line"></div>
+             <div class="line"></div>
+          </div>
+        </div>
+      </div>
+      <div class="extra content">
+      </div>
+    </div>
+  }
+</div>
+  }
+
+  @if (!_maps.Any() && _isInitialized && string.IsNullOrEmpty(_errorMessage))
+  {
+    <p>Looks like you have no Maps, click <a href="/mapcreateview">here</a> to get started.</p>
+  }
+
+  @if (_maps.Any() && _isInitialized)
+  {
+  @foreach (var mapGroup in _maps.GroupBy(m => m.RulesetName.ToUpper()).OrderBy(r => r.Key))
+  {
+    <h4 class="ui horizontal divider header">@mapGroup.Key</h4>
+  <div class="ui link four cards">
+    @foreach (var map in mapGroup.OrderBy(m => m.Name))
+    {
+      var mapId = map.Id;
+      var rulesetId = map.RulesetId;
+    <div class="ui green card" @onclick="@(() => this.NavigationManager.NavigateTo($"/rulesets/{rulesetId}/mapview/{mapId}"))">
+      <div class="image">
+        <img class="ui cardimage" src="@map.ImageUrl">
+      </div>
+      <div class="content">
+        <div class="header">@map.Name</div>
+        <div class="description">
+          @map.Description
+        </div>
+      </div>
+        <div class="extra content">
+          <span class="right floated delete" @onclick="(async () => await this.PromptDeleteMapAsync(mapId))" @onclick:stopPropagation>
+            <i class="delete icon red"></i>
+            Delete
+          </span>
+        </div>
+    </div>
+      @*<div class="green card" @onclick="@(() => this.NavigationManager.NavigateTo($"/rulesets/{rulesetId}/mapview/{mapId}"))">
+        <div class="content">
+          <div class="header">@map.Name</div>
+          <div class="image">
+            <img src="@map.ImageUrl">
+          </div>
+          <div class="description">
+            <p>@map.Description</p>
+          </div>
+        </div>
+        <div class="extra content">
+          <span class="right floated delete" @onclick="(async () => await this.PromptDeleteMapAsync(mapId))" @onclick:stopPropagation>
+            <i class="delete icon red"></i>
+            Delete
+          </span>
+        </div>
+      </div>*@
+    }
+</div>
+  }
+}
+</div>
+<DeleteConfirmation ItemType="Map" ConfirmClicked="@(async () => await this.DeleteMapAsync())"></DeleteConfirmation>

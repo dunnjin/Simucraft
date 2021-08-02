@@ -1,0 +1,85 @@
+﻿@using Simucraft.Client.Common; 
+
+@page "/rulesetlist"
+
+  <div class="ui container">
+    <h2 class="ui header">
+      <a href="/rulesetselectview" class="ui right floated  positive basic button">
+        <i class="add icon"></i>
+        Create
+      </a>
+      <i class="book icon"></i>
+      <div class="content">
+        Rulesets
+        <div class="sub header">Create and edit the rules and interactables for a Game. This is the starting point and is required to create Maps and start a Game.</div>
+      </div>
+    </h2>
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+    <div class="ui negative message">
+      <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+      <div class="header">
+        Error
+      </div>
+      <p>@_errorMessage</p>
+    </div>
+    }
+
+    @if (!_isInitialized)
+    {
+    <div class="ui link four cards">
+      @foreach (var _ in Enumerable.Range(1, 4))
+      {
+        <div class="grey card">
+          <div class="content">
+            <div class="ui placeholder">
+              <div class="header">
+                <div class="very short line"></div>
+              </div>
+              <div class="paragraph">
+                <div class="short line"></div>
+              </div>
+            </div>
+          </div>
+          <div class="extra content">
+            <span class="ui disabled right floated delete">
+              <i class="delete icon red"></i>
+              Delete
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+    }
+
+    @if (!_rulesets.Any() && _isInitialized && string.IsNullOrEmpty(_errorMessage))
+    {
+      <p>Looks like you haven't created a ruleset yet, click <a href="/rulesetselectview">here</a> to get started.</p>
+    }
+
+    @if (_rulesets.Any() && _isInitialized)
+    {
+    <div class="ui link four cards">
+      @foreach (var ruleset in _rulesets)
+      {
+        var rulesetId = ruleset.Id;
+
+        <div class="grey card" @onclick="@(() => this.NavigationManager.NavigateTo($"rulesetview/{rulesetId}"))">
+          <div class="content">
+            <div class="header">@ruleset.Name</div>
+            <div class="description">
+              <p>@ruleset.Description?.TruncateWithTrail(300)</p>
+            </div>
+          </div>
+          <div class="extra content">
+            <a class="right floated delete" @onclick="(async () => await this.PromptDeleteRulesetAsync(rulesetId))" @onclick:stopPropagation>
+              <i class="delete icon red"></i>
+              Delete
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+    }
+  </div>
+<DeleteConfirmation ItemType="Ruleset" ConfirmClicked="@(async () => await this.DeleteRulesetAsync())"></DeleteConfirmation>

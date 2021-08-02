@@ -1,0 +1,102 @@
+﻿@using BlazorInputFile;
+
+@page "/mapcreateview" 
+
+  <div class="ui container">
+    <h2 class="ui header">
+      <i class="map icon"></i>
+      <div class="content">
+        Create new Map
+      </div>
+    </h2>
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+      <div class="ui negative message">
+        <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+        <div class="header">
+          Error
+        </div>
+        <p>@_errorMessage</p>
+      </div>
+    }
+
+    @if (!_rulesets.Any() && _isInitialized && string.IsNullOrEmpty(_errorMessage))
+    {
+      <p>A Ruleset is needed before you can create a Map, click <a href="/rulesetselectview">here</a> to create one.</p>
+    }
+
+    @if (!_isInitialized)
+    {
+      <form class="ui form">
+        <div class="ui fluid placeholder">
+          <div class="short line"></div>
+          <div class="full line"></div>
+        </div>
+        <div class="ui fluid placeholder">
+          <div class="short line"></div>
+          <div class="full line"></div>
+          <div class="full line"></div>
+        </div>
+        <div class="ui fluid placeholder">
+          <div class="full line"></div>
+          <div class="full line"></div>
+        </div>
+        <div class="ui fluid placeholder">
+          <div class="full line"></div>
+          <div class="full line"></div>
+        </div>
+      </form>
+    }
+    @if (_rulesets.Any() && _isInitialized)
+    {
+      <EditForm OnSubmit="@this.SubmitAsync" EditContext="@_editContextValidator.EditContext" class="ui form">
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+        <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_map.Name)) ? "error" : null)">
+          <label>Name</label>
+          <InputText class="focus ui input" type="text" placeholder="Map Name" maxlength="50" @bind-Value="_map.Name" />
+          <div class="ui pointing red basic label" style="@(!_editContextValidator.IsFieldValidated(nameof(_map.Name)) ? null : "display: none")">
+            <ValidationMessage For="@(() => _map.Name)"></ValidationMessage>
+          </div>
+        </div>
+        <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_map.Description)) ? "error" : null)">
+          <label>Description</label>
+          <InputTextArea class="ui input noresize" rows="2" maxlength="1000" placeholder="Describe the Map" @bind-Value="_map.Description" />
+          <div class="ui pointing red basic label" style="@(!_editContextValidator.IsFieldValidated(nameof(_map.Description)) ? null : "display: none")">
+            <ValidationMessage For="@(() => _map.Description)"></ValidationMessage>
+          </div>
+        </div>
+        <div class="field">
+          <label>Ruleset</label>
+          <select id="test" class="ui dropdown" @bind="@_map.RulesetId">
+            @foreach (var ruleset in _rulesets)
+            {
+              var rulesetId = ruleset.Id;
+              <option value="@rulesetId">@ruleset.Name</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>Image</label>
+          <div class="ui inline active loader" style="@(!_isLoadingImage ? "display: none" : null)"></div>
+          <div id="fileUploadButton" class="ui basic icon buttons" style="@(_isLoadingImage ? "display: none" : null)">
+            <div class="ui labeled button">
+              <label class="ui button" data-tooltip="Upload Image" data-position="right center">
+                <i class="upload icon"></i>
+                <InputFile OnChange="@this.FileUploadedAsync" hidden>
+                </InputFile>
+              </label>
+            </div>
+            <label class="ui label" style="@(string.IsNullOrEmpty(_map.ImageName) ? "display: none" : null)">@_map.ImageName</label>
+          </div>
+        </div>
+        <div class="field" style="@(!_editContextValidator.IsFieldValidated(nameof(_map.ImageName)) ? null : "display: none")">
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _map.ImageName)"></ValidationMessage>
+          </div>
+        </div>
+        <div class="field">
+          <button class="ui fluid large submit primary button @(_isSaving ? "loading disabled" : null)">Save</button>
+        </div>
+      </EditForm>
+    }
+  </div>

@@ -1,0 +1,35 @@
+﻿<div id="chatBar" class="ui two wide vertical column" style="padding-top: 1.09rem; padding-left: 0rem; padding-right: 0rem;">
+  <div class="ui small comments">
+    <h4 class="ui dividing center aligned header" style="padding-left: 1rem;">CHAT</h4>
+
+    <div id="chatMessages" class="ui chatmessages">
+
+
+
+      <!-- Loop through messages -->
+      @foreach (var message in this.ChatMessages)
+      {
+        <div class="comment">
+          <div class="content">
+            <span class="author" style="@(message.IsSystem ? "color: rgb(153,153,153)" : null)">@(!string.IsNullOrEmpty(message.DisplayName) ? $"{message.DisplayName}:" : null)</span>
+            <span class="text tooltip" style="@(message.IsSystem ? "color: rgb(153,153,153)" : null)" data-content="@(message.UserId == this.ClientState.UserId || this.Ruleset.IsOwner ? message.Tooltip : null)" data-variation="mini">
+              @message.Message
+            </span>
+          </div>
+        </div>
+      }
+
+    </div>
+
+    <EditForm class="ui reply form chatinput" OnValidSubmit="@this.SendChatMessageAsync" Model="@_chatMessage">
+      <DataAnnotationsValidator></DataAnnotationsValidator>
+      <div class="ui divider"></div>
+      <div class="field">
+        <div class="ui icon input">
+          <i class="send link icon submit" @onclick="@this.SendChatMessageAsync" style="z-index: 1"></i>
+          <InputText class="ui focus input" type="text" maxlength="500" placeholder="Send Message" @bind-Value="_chatMessage.Message" />
+        </div>
+      </div>
+    </EditForm>
+  </div>
+</div>

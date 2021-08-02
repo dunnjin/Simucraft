@@ -1,0 +1,53 @@
+﻿@using Simucraft.Client.Common;
+@using Simucraft.Client.Core;
+@using Simucraft.Client.Models;
+
+    @if (this.ClientState.SelectedGameCharacterId.HasValue)
+    {
+      <div class="ui tiny menu" style="margin: 0rem; border-top-color: transparent;">
+        <a class="item @(_gameCharacterInfoView == GameCharacterInfoView.Stats ? "active" : null)" data-tooltip="Stats" data-position="left center" @onclick="@(() => _gameCharacterInfoView = GameCharacterInfoView.Stats)">
+          <i class="info icon"></i>
+        </a>
+        <a class="item @(_gameCharacterInfoView == GameCharacterInfoView.Skills ? "active" : null)" data-tooltip="Skills" data-position="left center" @onclick="@(() => _gameCharacterInfoView = GameCharacterInfoView.Skills)">
+          <i class="cogs icon"></i>
+        </a>
+        <a class="item @(_gameCharacterInfoView == GameCharacterInfoView.Weapons ? "active" : null)" data-tooltip="Weapons" data-position="left center" @onclick="@(() => _gameCharacterInfoView = GameCharacterInfoView.Weapons)">
+          <i class="gavel icon"></i>
+        </a>
+        <div class="right menu">
+          <a class="item @(_isEditGameCharacter ? "active" : null)" data-tooltip="Edit" data-position="left center" @onclick="@(() => _isEditGameCharacter = !_isEditGameCharacter)">
+            <i class="edit @(_isEditGameCharacter ? null : "outline") icon"></i>
+          </a>
+        </div>
+      </div>
+    }
+
+@if (!this.ClientState.SelectedGameCharacterId.HasValue)
+{
+  if (!string.IsNullOrEmpty(this.Game.Name))
+  {
+    <h2 class="ui center aligned icon header" style="margin-top: 2rem;">
+      <i class="circular gamepad icon"></i>
+      <div class="content">
+        @this.Game.Name
+        <div class="sub header">@this.Game.Description</div>
+      </div>
+    </h2>
+  }
+}
+
+  <div id="gamecharacterinfo" class="ui restrict" style="padding-top: 2rem;">
+
+    @if (this.ClientState.SelectedGameCharacterId.HasValue)
+    {
+      @if(_gameCharacterInfoView == GameCharacterInfoView.Stats)
+      {
+        <GameCharacterInfoStats GameCharacter="this.SelectedGameCharacter" GameHubService="this.GameHubService"></GameCharacterInfoStats>
+      }
+      else if(_gameCharacterInfoView == GameCharacterInfoView.Weapons)
+      {
+          <GameCharacterInfoWeapons GameCharacter="this.SelectedGameCharacter" GameHubService="this.GameHubService"></GameCharacterInfoWeapons>
+      }
+    }
+
+  </div>

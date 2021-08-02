@@ -1,0 +1,394 @@
+﻿@using Simucraft.Client.Models;
+@using Simucraft.Client.Common; 
+@using BlazorInputFile; 
+
+  <div class="ui container">
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+      <div class="ui negative message">
+        <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+        <div class="header">
+          Error
+        </div>
+        <p>@_errorMessage</p>
+      </div>
+    }
+    <h2 class="ui header">
+      @if (_isListView)
+      {
+        <a class="ui right floated positive basic button" @onclick="@(() => this.NavigateToCreate(null))">
+          <i class="add icon"></i>
+          Create
+        </a>
+      }
+      <i class="male icon"></i>
+      <div class="content">
+        Characters
+        <div class="sub header">The core playable element in the Game that can be given Weapons, Skills, Equipment, etc.</div>
+      </div>
+    </h2>
+    @if (_isListView)
+    {
+      @foreach (var characterGroup in this.Ruleset.Characters.GroupBy(c => c.Category.ToUpper()).OrderBy(c => c.Key))
+      {
+        <h4 class="ui horizontal divider header">@characterGroup.Key</h4>
+        <div class="ui link four cards">
+          @foreach (var character in characterGroup.OrderBy(c => c.Name).ThenBy(c => c.Id))
+          {
+            var id = character.Id;
+            <div class="red card" @onclick="@(() => this.NavigateToCreate(id))">
+              <div class="image">
+                <img class="ui cardimage" src="@(character.ImageUrl ?? "/assets/question-mark.png")" />
+              </div>
+              <div class="content">
+                <div class="header">@character.Name</div>
+                <div class="description">
+                  <p>@character.Description?.TruncateWithTrail(300)</p>
+                </div>
+              </div>
+              <div class="extra content">
+                <a class="left floated like" @onclick="@(async () => await this.CopyAsync(id))" @onclick:stopPropagation>
+                  <i class="copy icon grey"></i>
+                  Copy
+                </a>
+                <a class="right floated delete" @onclick="@(async () => await this.PromptDeleteAsync(id))" @onclick:stopPropagation>
+                  <i class="delete icon red"></i>
+                  Delete
+                </a>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+    else
+    {
+  <EditForm OnSubmit="@this.SubmitAsync" EditContext="@_editContextValidator.EditContext" class="ui form">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <div class="two fields">
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_character.Name)) ? "error" : null)">
+        <label data-tooltip="The Name of the Character" data-position="top left">
+          Name
+        </label>
+        <InputText class="focus ui input" type="text" placeholder="Name" maxlength="50" @bind-Value="_character.Name" />
+        @if (!_editContextValidator.IsFieldValidated(nameof(_character.Name)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _character.Name)"></ValidationMessage>
+          </div>
+        }
+      </div>
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_character.Category)) ? "error" : null)">
+        <label data-tooltip="How the Character should be grouped by" data-position="top left">
+          Category
+        </label>
+        <InputText class="ui input" type="text" placeholder="Category" maxlength="50" @bind-Value="_character.Category" />
+        @if (!_editContextValidator.IsFieldValidated(nameof(_character.Category)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _character.Category)"></ValidationMessage>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_character.Description)) ? "error" : null)">
+      <label data-tooltip="A brief description of the Character" data-position="top left">
+        Description
+      </label>
+      <InputTextArea class="ui input noresize" type="text" rows="2" placeholder="Describe the Character" maxlength="1000" @bind-Value="_character.Description" />
+
+      @if (!_editContextValidator.IsFieldValidated(nameof(_character.Description)))
+      {
+        <div class="ui pointing red basic label">
+          <ValidationMessage For="@(() => _character.Description)"></ValidationMessage>
+        </div>
+      }
+    </div>
+    <div class="field">
+      <label>Image</label>
+      @if (_isLoadingImage)
+      {
+        <div class="ui inline active loader"></div>
+      }
+      else
+      {
+        <div class="ui basic icon buttons">
+          <div class="ui labeled button">
+            <label class="ui button" data-tooltip="Upload Image" data-position="right center">
+              <i class="upload icon"></i>
+              <InputFile accept="image/*" OnChange="@this.FileUploadedAsync" hidden>
+              </InputFile>
+            </label>
+          </div>
+          @if (!string.IsNullOrEmpty(_character.ImageName))
+          {
+            <label class="ui label">@_character.ImageName</label>
+          }
+        </div>
+      }
+    </div>
+    <div class="field" style="@(!_editContextValidator.IsFieldValidated(nameof(_character.ImageName)) ? null : "display: none")">
+      <div class="ui pointing red basic label">
+        <ValidationMessage For="@(() => _character.ImageName)"></ValidationMessage>
+      </div>
+    </div>
+    <div class="three fields">
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_character.HealthPoints)) ? "error" : null)">
+        <label data-tooltip="The starting Health Points" data-position="top left">
+          <i class="heart icon"></i>
+          HP
+        </label>
+        <InputText class="ui input" @bind-Value="@_character.HealthPoints" placeholder="10" maxlength="50"></InputText>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_character.HealthPoints)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _character.HealthPoints)"></ValidationMessage>
+          </div>
+        }
+      </div>
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_character.Level)) ? "error" : null)">
+        <label data-tooltip="The Characters level" data-position="top left">
+          <i class="level up alternate icon"></i>
+          Level
+        </label>
+        <InputNumber @bind-Value="@_character.Level" min="1" max="1000"></InputNumber>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_character.Level)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _character.Level)"></ValidationMessage>
+          </div>
+        }
+      </div>
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_character.Movement)) ? "error" : null)">
+        <label data-tooltip="The number of Tiles the Character can move" data-position="top left">
+          <i class="arrows alternate icon"></i>
+          Movement
+        </label>
+        <InputNumber @bind-Value="@_character.Movement" min="0" max="100"></InputNumber>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_character.Movement)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _character.Movement)"></ValidationMessage>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="three fields">
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_character.CarryingCapacity)) ? "error" : null)">
+        <label data-tooltip="The max number of weight the Character can hold" data-position="top left">
+          <i class="shopping bag icon"></i>
+          Carrying Capacity
+        </label>
+        <InputText class="ui input" @bind-Value="@_character.CarryingCapacity" placeholder="100" maxlength="50" ></InputText>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_character.CarryingCapacity)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _character.CarryingCapacity)"></ValidationMessage>
+          </div>
+        }
+      </div>
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_character.Width)) ? "error" : null)">
+        <label data-tooltip="The number of Tiles wide" data-position="top left">
+          <i class="arrows alternate horizontal icon"></i>
+          Width
+        </label>
+        <InputNumber @bind-Value="@_character.Width" min="1" max="50"></InputNumber>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_character.Width)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _character.Width)"></ValidationMessage>
+          </div>
+        }
+      </div>
+      <div class="field @(!_editContextValidator.IsFieldValidated(nameof(_character.Height)) ? "error" : null)">
+        <label data-tooltip="The number of Tiles high" data-position="top left">
+          <i class="arrows alternate vertical icon"></i>
+          Height
+        </label>
+        <InputNumber @bind-Value="@_character.Height" min="1" max="50"></InputNumber>
+        @if (!_editContextValidator.IsFieldValidated(nameof(_character.Height)))
+        {
+          <div class="ui pointing red basic label">
+            <ValidationMessage For="@(() => _character.Height)"></ValidationMessage>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="field">
+      <label>Weapons</label>
+      <div class="ui fluid multiple search selection dropdown">
+        <input name="weapons" type="hidden" @bind-value="@this.WeaponIds" />
+        <i class="dropdown icon"></i>
+        <div class="default text">Select Weapons</div>
+        <div class="menu">
+          @foreach (var group in this.Ruleset.Weapons.OrderBy(e => e.Name).GroupBy(e => e.Category.ToUpper()))
+          {
+            @if (!group.All(e => this.WeaponIds.Contains(e.Id.ToString())))
+            {
+              <div class="header">@group.Key</div>
+            }
+
+            @foreach (var entity in group)
+            {
+              var id = entity.Id;
+              <div class="item" data-value="@id">@entity.Name</div>
+            }
+            <div class="divider"></div>
+          }
+        </div>
+      </div>
+    </div>
+
+    @*<div class="field">
+      <label>Abilities / Equipment</label>
+      <div class="ui fluid multiple search selection dropdown">
+        <input name="equipment" type="hidden" @bind-value="@this.EquipmentIds" />
+        <i class="dropdown icon"></i>
+        <div class="default text">Select Abilities or Equipment</div>
+        <div class="menu">
+          @foreach (var group in this.Ruleset.Equipment.OrderBy(e => e.Name).GroupBy(e => e.Category.ToUpper()))
+          {
+            @if (!group.All(e => this.EquipmentIds.Contains(e.Id.ToString())))
+            {
+              <div class="header">@group.Key</div>
+            }
+
+            @foreach (var entity in group)
+            {
+              var id = entity.Id;
+              <div class="item" data-value="@id">@entity.Name</div>
+            }
+            <div class="divider"></div>
+          }
+        </div>
+      </div>
+    </div>*@
+    @*<div class="field">
+      <label>Spells</label>
+      <div class="ui fluid multiple search selection dropdown">
+        <input name="spells" type="hidden" @bind-value="@this.SpellIds" />
+        <i class="dropdown icon"></i>
+        <div class="default text">Select Skills</div>
+        <div class="menu">
+          @foreach (var group in this.Ruleset.Spells.OrderBy(e => e.Name).GroupBy(e => e.Category.ToUpper()))
+          {
+            @if (!group.All(e => this.SpellIds.Contains(e.Id.ToString())))
+            {
+              <div class="header">@group.Key</div>
+            }
+
+            @foreach (var entity in group)
+            {
+              var id = entity.Id;
+              <div class="item" data-value="@id">@entity.Name</div>
+            }
+            <div class="divider"></div>
+          }
+        </div>
+      </div>
+    </div>*@
+    <h4 class="ui horizontal divider header">
+      Stats
+    </h4>
+    <div class="fields">
+      <div class="fifteen wide field">
+        <div class="ui visible message">
+          <i class="info icon"></i>
+          Keywords that are referenced in other tabs like Weapons, Equipment, Spells, etc, are automatically added here as a Stat.
+        </div>
+      </div>
+      <div class="one wide field">
+        <button type="button" class="ui right floated positive basic icon button @(_character.Stats.Any(s => string.IsNullOrEmpty(s.Name)) || _character.Stats.Count > 200 ? "disabled" : null)" @onclick="@this.AddStat" data-tooltip="Add Stat" data-position="top left">
+          <i class="add icon"></i>
+        </button>
+      </div>
+    </div>
+    @foreach (var stat in _character.Stats)
+    {
+      var statName = stat.Name;
+      <div class="fields">
+        <div class="eight wide field @(_invalidStatNames.Contains(statName) ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Name" maxlength="50" @bind-Value="stat.Name" />
+          @if (_invalidStatNames.Contains(statName))
+          {
+            <div class="ui pointing red basic label">
+              Name must be at least 2 letters with no spaces, numbers, or special characters.
+            </div>
+          }
+        </div>
+        <div class="seven wide field">
+          <InputText class="ui input" type="text" placeholder="Value" maxlength="50" @bind-Value="stat.Value"></InputText>
+        </div>
+        <div class="one wide field">
+          <button type="button" class="ui right floated red basic icon button" @onclick="@(() => this.RemoveStat(statName))">
+            <i class="delete icon"></i>
+          </button>
+        </div>
+      </div>
+    }
+    <h4 class="ui horizontal divider header">
+      Skills
+    </h4>
+    <div class="fields">
+      <div class="fifteen wide field">
+        <div class="ui visible message">
+          <i class="info icon"></i>
+          Here you can add different types of Skill to roll dice, do basic math, or interact with Character stats. e.g. 1d8 + HP.
+        </div>
+      </div>
+      <div class="one wide field">
+        <button type="button" class="ui right floated positive basic icon button @(_character.Skills.Any(s => string.IsNullOrEmpty(s.Name)) || _character.Skills.Count >= 50 ? "disabled" : null)" @onclick="@this.AddSkill" data-tooltip="Add Skill" data-position="top left">
+          <i class="add icon"></i>
+        </button>
+      </div>
+    </div>
+    @foreach (var skill in _character.Skills)
+    {
+      var skillName = skill.Name;
+      var skillId = skill.Id;
+      var skillExpression = skill.Expression;
+
+      var isNameError = _invalidSkillNames.Contains(skillName);
+      var isExpressionError = _invalidSkillExpressions.Contains(skillExpression);
+
+      <div class="fields">
+        <div class="eight wide field @(isNameError ? "error" : null)">
+          <InputText class="ui input" type="text" placeholder="Name" maxlength="50" @bind-Value="skill.Name" />
+          @if (isNameError)
+          {
+            <div class="ui pointing red basic label">
+              Must have a value.
+            </div>
+          }
+        </div>
+        <div class="seven wide field">
+          <InputText class="ui input" type="text" placeholder="Category" maxlength="50" @bind-Value="skill.Category"></InputText>
+        </div>
+        <div class="one wide field">
+          <button type="button" class="ui right floated red basic icon button" @onclick="@(() => this.RemoveSkill(skillId))">
+            <i class="delete icon"></i>
+          </button>
+        </div>
+      </div>
+      <div class="fifteen wide field @(isExpressionError ? "error" : null)">
+        <InputText class="ui input" type="text" placeholder="1d20 + Level" maxlength="200" @bind-Value="skill.Expression"></InputText>
+        @if (isExpressionError)
+        {
+          <div class="ui pointing red basic label">
+            Must result in a valid number.
+          </div>
+        }
+      </div>
+    }
+    <div class="two fields">
+      <div class="field">
+        <button class="ui fluid large submit primary button @(_isSaving ? "loading disabled" : null)">Save</button>
+      </div>
+      <div class="field">
+        <button type="button" class="ui fluid large button @(_isSaving ? "disabled" : null)" @onclick="() => _isListView = true">Cancel</button>
+      </div>
+    </div>
+  </EditForm>
+    }
+  </div>
+  <DeleteConfirmation ItemType="Character" ConfirmClicked="@this.DeleteAsync"></DeleteConfirmation>

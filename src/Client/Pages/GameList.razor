@@ -1,0 +1,111 @@
+﻿@using Simucraft.Client.Components;
+
+@page "/gamelist"
+
+  <div class="ui container">
+    <h2 class="ui header">
+      <a href="/gamecreateview" class="ui right floated positive basic button">
+        <i class="add icon"></i>
+        Create
+      </a>
+      <i class="gamepad icon"></i>
+      <div class="content">
+        Games
+        <div class="sub header">Using defined rules play a Game with friends.</div>
+      </div>
+    </h2>
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+      <div class="ui negative message">
+        <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+        <div class="header">
+          Error
+        </div>
+        <p>@_errorMessage</p>
+      </div>
+    }
+    @if (!_isInitialized)
+    {
+      <div class="ui link four cards">
+        @foreach (var _ in Enumerable.Range(1, 4))
+        {
+          <div class="orange card">
+            <div class="content">
+              <div class="ui placeholder">
+                <div class="header">
+                  <div class="very short line"></div>
+                </div>
+                <div class="paragraph">
+                  <div class="short line"></div>
+                </div>
+              </div>
+            </div>
+            <div class="extra content">
+              <span class="ui disabled right floated delete">
+                <i class="delete icon red"></i>
+                Delete
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (!_games.Any() && !_invitedGames.Any() && _isInitialized && string.IsNullOrEmpty(_errorMessage))
+    {
+      <p>Looks like you have no Games, click <a href="/gamecreateview">here</a> to get started.</p>
+    }
+
+    @if (_games.Any() && _isInitialized)
+    {
+      <h4 class="ui horizontal divider header">
+        YOUR GAMES
+      </h4>
+      <div class="ui link four cards">
+        @foreach (var game in _games.OrderBy(m => m.Name))
+        {
+          var gameId = game.Id;
+          var rulesetId = game.RulesetId;
+
+          <div class="orange card" @onclick="@(() => this.NavigationManager.NavigateTo($"/rulesets/{rulesetId}/gameview/{gameId}"))">
+            <div class="content">
+              <div class="header">@game.Name</div>
+              <div class="description">
+                <p>@game.Description</p>
+              </div>
+            </div>
+            <div class="extra content">
+              <span class="right floated delete" @onclick="(async () => await this.PromptDeleteAsync(gameId))" @onclick:stopPropagation>
+                <i class="delete icon red"></i>
+                Delete
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (_invitedGames.Any() && _isInitialized)
+    {
+      <h4 class="ui horizontal divider header">
+        JOINED GAMES
+      </h4>
+      <div class="ui link four cards">
+        @foreach (var game in _invitedGames.OrderBy(m => m.Name))
+        {
+          var gameId = game.Id;
+          var rulesetId = game.RulesetId;
+
+          <div class="orange card" @onclick="@(() => this.NavigationManager.NavigateTo($"/rulesets/{rulesetId}/gameview/{gameId}"))">
+            <div class="content">
+              <div class="header">@game.Name</div>
+              <div class="description">
+                <p>@game.Description</p>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+<DeleteConfirmation ItemType="Game" ConfirmClicked="@(async () => await this.DeleteAsync())"></DeleteConfirmation>

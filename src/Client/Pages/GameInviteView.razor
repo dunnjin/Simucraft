@@ -1,0 +1,29 @@
+﻿@page "/rulesets/{rulesetId}/games/{gameId}/invite/{inviteId}"
+
+  <div class="ui container">
+    @if (string.IsNullOrEmpty(_errorMessage))
+    {
+      <div class="ui icon message">
+        <i class="envelope icon"></i>
+        <div class="content">
+          <div class="header">
+            One moment please
+          </div>
+          <p>
+            Accepting Game Invite...
+          </p>
+        </div>
+      </div>
+    }
+    else
+    {
+      <div class="ui negative message">
+        <i class="close icon" @onclick="(() => _errorMessage = null)"></i>
+        <div class="header">
+          Error
+        </div>
+        <p>@_errorMessage</p>
+      </div>
+    }
+  </div>
+

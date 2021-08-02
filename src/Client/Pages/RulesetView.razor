@@ -1,0 +1,148 @@
+﻿@using Simucraft.Client.Models;
+@using Simucraft.Client.Common;
+@using Simucraft.Client.Core;
+
+@page "/rulesetview/{id}"
+
+<div class="ui grid">
+  @*<div class="two wide column">
+    <h2 class="ui header">
+      <i class="book icon"></i>
+      <div class="content">
+        Ruleset
+        <div class="sub header">Update the Ruleset.</div>
+      </div>
+    </h2>
+    <div class="ui secondary vertical pointing menu">
+      <a class="item @(_selectedRulesetViewType == RulesetViewType.Basic ? "active" : null)" @onclick="@(() => _selectedRulesetViewType = RulesetViewType.Basic)">
+        <i class="bookmark icon"></i>
+        Basic
+      </a>*@
+      @*<a class="item @(_selectedRulesetViewType == RulesetViewType.Skills ? "active" : null)" @onclick="@(() => _selectedRulesetViewType = RulesetViewType.Skills)">
+        <i class="cogs icon"></i>
+        Skills
+      </a>*@
+      @*<a class="item @(_selectedRulesetViewType == RulesetViewType.Weapons ? "active" : null)" @onclick="@(() => _selectedRulesetViewType = RulesetViewType.Weapons)">
+        <i class="gavel icon"></i>
+        Weapons
+      </a>*@
+      @*<a class="item @(_selectedRulesetViewType == RulesetViewType.Equipment ? "active" : null)" @onclick="@(() => _selectedRulesetViewType = RulesetViewType.Equipment)">
+        <i class="anchor icon"></i>
+        Abilities / Equipment
+      </a>
+      <a class="item @(_selectedRulesetViewType == RulesetViewType.Spells ? "active" : null)" @onclick="@(() => _selectedRulesetViewType = RulesetViewType.Spells)">
+        <i class="magic icon"></i>
+        Spells
+      </a>*@
+      @*<a class="item @(_selectedRulesetViewType == RulesetViewType.Characters ? "active" : null)" @onclick="@(() => _selectedRulesetViewType = RulesetViewType.Characters)">
+        <i class="male icon"></i>
+        Characters
+      </a>
+    </div>
+  </div>*@
+
+  <div class="fourteen wide column">
+    <div class="ui container">
+      <div class="ui secondary pointing menu">
+        <a class="item @(_selectedRulesetViewType == RulesetViewType.Basic ? "active" : null)" @onclick="@(() => _selectedRulesetViewType = RulesetViewType.Basic)">
+          Basic
+        </a>
+        <a class="item @(_selectedRulesetViewType == RulesetViewType.Equipment ? "active" : null)" @onclick="@(() => _selectedRulesetViewType = RulesetViewType.Equipment)">
+          Equipment
+        </a>
+        <a class="item @(_selectedRulesetViewType == RulesetViewType.Spells ? "active" : null)" @onclick="@(() => _selectedRulesetViewType = RulesetViewType.Spells)">
+          Spells
+        </a>
+        <a class="item @(_selectedRulesetViewType == RulesetViewType.Skills ? "active" : null)" @onclick="@(() => _selectedRulesetViewType = RulesetViewType.Skills)">
+          Skills
+        </a>
+        <a class="item @(_selectedRulesetViewType == RulesetViewType.Characters ? "active" : null)" @onclick="@(() => _selectedRulesetViewType = RulesetViewType.Characters)">
+          Characters
+        </a>
+      </div>
+    @if (!_initializedRulesetViewTypes.Contains(_selectedRulesetViewType))
+    {
+      <div class="ui container">
+
+        <div class="ui fluid placeholder">
+          <div class="image header">
+            <div class="line"></div>
+            <div class="line"></div>
+          </div>
+        </div>
+
+        <div class="ui" style="padding-bottom: 1rem;"></div>
+
+        @if (_selectedRulesetViewType != RulesetViewType.Basic)
+        {
+            <div class="ui link four cards">
+              @foreach (var _ in Enumerable.Range(1, 4))
+              {
+                <div class="grey card">
+                  <div class="content">
+                    <div class="ui placeholder">
+                      <div class="header">
+                        <div class="very short line"></div>
+                      </div>
+                      <div class="paragraph">
+                        <div class="short line"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="extra content">
+                    <span class="ui disabled right floated delete">
+                      <i class="delete icon red"></i>
+                      Delete
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+        }
+      </div>
+    }
+    else
+    {
+
+      @switch (_selectedRulesetViewType)
+      {
+        case RulesetViewType.Basic:
+          <RulesetBasic Ruleset="@_ruleset" OnSaved="@(() => base.StateHasChanged())"></RulesetBasic>
+          break;
+        case RulesetViewType.Skills:
+          <RulesetSkills Ruleset="@_ruleset" OnSaved="@(() => base.StateHasChanged())"></RulesetSkills>
+          break;
+        case RulesetViewType.Weapons:
+          <RulesetWeapons Ruleset="@_ruleset" OnSaved="@(() => base.StateHasChanged())"></RulesetWeapons>
+          break;
+        case RulesetViewType.Equipment:
+          <RulesetEquipment Ruleset="@_ruleset" OnSaved="@(() => base.StateHasChanged())"></RulesetEquipment>
+          break;
+        case RulesetViewType.Spells:
+          <RulesetSpells Ruleset="@_ruleset" OnSaved="@(() => base.StateHasChanged())"></RulesetSpells>
+          break;
+        case RulesetViewType.Characters:
+          <RulesetCharacters Ruleset="@_ruleset"></RulesetCharacters>
+          break;
+      }
+    }
+    </div>
+  </div>
+  <div class="two wide column">
+    @if (_initializedRulesetViewTypes.Contains(RulesetViewType.Basic))
+    {
+      <h4 class="ui header">
+        <i class="list icon"></i>
+        KEYWORDS
+      </h4>
+      <div class="ui relaxed divided list">
+        @foreach (var stat in Constants.DISPLAY_RESERVED_KEYWORDS.Concat(_ruleset.GenerateKeywords()))
+        {
+          <div class="item">
+            @stat
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
